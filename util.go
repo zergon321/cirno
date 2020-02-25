@@ -38,7 +38,7 @@ func boundingBoxesIntersect(a0, a1, b0, b1 Vector) bool {
 
 // Approximate attempts to move the shape in the specified direction
 // to detect the closest point until the shape collides other shapes.
-func Approximate(shape Shape, diff Vector, shapes Shapes, intensity int) (Vector, error) {
+func Approximate(shape Shape, diff Vector, shapes Shapes, intensity int, useTags bool) (Vector, error) {
 	if intensity < 0 {
 		return Zero, fmt.Errorf("The value of intensity must be non-zero")
 	}
@@ -70,7 +70,7 @@ func Approximate(shape Shape, diff Vector, shapes Shapes, intensity int) (Vector
 				}
 			}
 
-			if ResolveCollision(shape, other) {
+			if ResolveCollision(shape, other, useTags) {
 				collisionFound = true
 				break
 			}

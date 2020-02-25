@@ -8,10 +8,11 @@ import (
 // Space represents a geometric space
 // with shapes within it.
 type Space struct {
-	min    Vector
-	max    Vector
-	shapes Shapes
-	tree   *quadTree
+	min     Vector
+	max     Vector
+	shapes  Shapes
+	tree    *quadTree
+	useTags bool
 }
 
 // InBounds detects if the center the given shape
@@ -144,7 +145,7 @@ func (space *Space) CollidingShapes() (map[Shape]Shapes, error) {
 			}
 
 			for _, otherShape := range shapes[i+1:] {
-				if ResolveCollision(shape, otherShape) {
+				if ResolveCollision(shape, otherShape, space.useTags) {
 					collidingShapes[shape].Insert(otherShape)
 
 					if _, ok := collidingShapes[otherShape]; !ok {
@@ -175,7 +176,7 @@ func (space *Space) CollidingWith(shape Shape) (Shapes, error) {
 
 	for _, area := range nodes {
 		for item := range area.shapes {
-			if item != shape && ResolveCollision(shape, item) {
+			if item != shape && ResolveCollision(shape, item, space.useTags) {
 				shapes.Insert(item)
 			}
 		}
@@ -238,7 +239,7 @@ func (space *Space) WouldBeColliding(shape Shape, diff Vector) (Shapes, error) {
 				}
 			}
 
-			if ResolveCollision(shape, item) {
+			if ResolveCollision(shape, item, space.useTags) {
 				shapes.Insert(item)
 			}
 		}
@@ -256,7 +257,7 @@ func (space *Space) WouldBeColliding(shape Shape, diff Vector) (Shapes, error) {
 }
 
 // NewSpace creates a new empty space with the given parameters.
-func NewSpace(subdivisionFactor, shapesInArea int, width, height float64, min, max Vector) (*Space, error) {
+func NewSpace(subdivisionFactor, shapesInArea int, width, height float64, min, max Vector, useTags bool) (*Space, error) {
 	if width <= 0 || height <= 0 {
 		return nil, fmt.Errorf("Space must have positive values for width and height")
 	}
@@ -272,6 +273,7 @@ func NewSpace(subdivisionFactor, shapesInArea int, width, height float64, min, m
 	space := new(Space)
 	space.min = min
 	space.max = max
+	space.useTags = useTags
 	space.shapes = make(Shapes, 0)
 	tree, err := newQuadTree(NewRectangle(NewVector(0, 0), width, height, 0.0),
 		subdivisionFactor, shapesInArea)

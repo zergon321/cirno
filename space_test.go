@@ -9,7 +9,7 @@ import (
 )
 
 func TestSpaceAddShapes(t *testing.T) {
-	space, err := cirno.NewSpace(5, 3, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10))
+	space, err := cirno.NewSpace(5, 3, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10), false)
 	assert.Nil(t, err)
 	rect := cirno.NewRectangle(cirno.NewVector(9, 9), 4, 6, 0.0)
 	circle := cirno.NewCircle(cirno.NewVector(8, 4), 3)
@@ -37,7 +37,7 @@ func TestSpaceAddShapes(t *testing.T) {
 }
 
 func TestSpaceRemoveShapes(t *testing.T) {
-	space, err := cirno.NewSpace(5, 3, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10))
+	space, err := cirno.NewSpace(5, 3, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10), false)
 	assert.Nil(t, err)
 	rect := cirno.NewRectangle(cirno.NewVector(9, 9), 4, 6, 0.0)
 	circle := cirno.NewCircle(cirno.NewVector(8, 4), 3)
@@ -75,7 +75,7 @@ func TestSpaceRemoveShapes(t *testing.T) {
 }
 
 func TestSpaceContainsShape(t *testing.T) {
-	space, err := cirno.NewSpace(5, 3, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10))
+	space, err := cirno.NewSpace(5, 3, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10), false)
 	assert.Nil(t, err)
 	rect := cirno.NewRectangle(cirno.NewVector(9, 9), 4, 6, 0.0)
 	circle := cirno.NewCircle(cirno.NewVector(8, 4), 3)
@@ -96,7 +96,7 @@ func TestSpaceContainsShape(t *testing.T) {
 }
 
 func TestSpaceClear(t *testing.T) {
-	space, err := cirno.NewSpace(5, 3, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10))
+	space, err := cirno.NewSpace(5, 3, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10), false)
 	assert.Nil(t, err)
 	rect := cirno.NewRectangle(cirno.NewVector(9, 9), 4, 6, 0.0)
 	circle := cirno.NewCircle(cirno.NewVector(8, 4), 3)
@@ -116,7 +116,7 @@ func TestSpaceClear(t *testing.T) {
 }
 
 func TestGetCollidingShapes(t *testing.T) {
-	space, err := cirno.NewSpace(4, 1, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10))
+	space, err := cirno.NewSpace(4, 1, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10), false)
 	assert.Nil(t, err)
 	rect := cirno.NewRectangle(cirno.NewVector(9, 9), 4, 6, 0.0)
 	circle := cirno.NewCircle(cirno.NewVector(8, 4), 3)
@@ -140,7 +140,7 @@ func TestGetCollidingShapes(t *testing.T) {
 }
 
 func TestGetShapesCollidingWithShape(t *testing.T) {
-	space, err := cirno.NewSpace(10, 10, 1280*2, 720*2, cirno.NewVector(0, 0), cirno.NewVector(1280, 720))
+	space, err := cirno.NewSpace(10, 10, 1280*2, 720*2, cirno.NewVector(0, 0), cirno.NewVector(1280, 720), false)
 	assert.Nil(t, err)
 	rect := cirno.NewRectangle(cirno.NewVector(600, 228), 150, 50, 0.0)
 	circle := cirno.NewCircle(cirno.NewVector(8, 4), 3)
@@ -167,7 +167,7 @@ func TestGetShapesCollidingWithShape(t *testing.T) {
 }
 
 func TestOneShapeCollisions(t *testing.T) {
-	space, err := cirno.NewSpace(4, 1, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10))
+	space, err := cirno.NewSpace(4, 1, 20, 20, cirno.NewVector(0, 0), cirno.NewVector(10, 10), false)
 	assert.Nil(t, err)
 	rect := cirno.NewRectangle(cirno.NewVector(9, 9), 4, 6, 0.0)
 

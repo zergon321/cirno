@@ -7,7 +7,11 @@ import (
 
 // ResolveCollision assumes types of the given shapes
 // and detects if they collide.
-func ResolveCollision(one, another Shape) bool {
+func ResolveCollision(one, another Shape, useTags bool) bool {
+	if useTags && !one.ShouldCollide(another) {
+		return false
+	}
+
 	oneType := reflect.TypeOf(one).Elem()
 	anotherType := reflect.TypeOf(another).Elem()
 	id := oneType.Name() + "_" + anotherType.Name()

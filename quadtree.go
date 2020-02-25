@@ -61,7 +61,7 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !ResolveCollision(node.boundary, shape) {
+		if !ResolveCollision(node.boundary, shape, false) {
 			continue
 		}
 
@@ -113,7 +113,7 @@ func (tree *quadTree) search(shape Shape) ([]*quadTreeNode, error) {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !ResolveCollision(node.boundary, shape) {
+		if !ResolveCollision(node.boundary, shape, false) {
 			continue
 		}
 
@@ -148,7 +148,7 @@ func (tree *quadTree) remove(shape Shape) error {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !ResolveCollision(node.boundary, shape) {
+		if !ResolveCollision(node.boundary, shape, false) {
 			continue
 		}
 
@@ -237,7 +237,7 @@ func (node *quadTreeNode) canAcceptShape() bool {
 // in the list of node shapes.
 func (node *quadTreeNode) add(shapes Shapes) {
 	for shape := range shapes {
-		if ResolveCollision(node.boundary, shape) {
+		if ResolveCollision(node.boundary, shape, false) {
 			node.shapes.Insert(shape)
 		}
 	}

@@ -73,7 +73,7 @@ func run() {
 
 	// Setup physics.
 	space, err := cirno.NewSpace(5, 20, width*2, height*2,
-		cirno.Zero, cirno.NewVector(width, height))
+		cirno.Zero, cirno.NewVector(width, height), false)
 	handleError(err)
 
 	// Create borders.
@@ -229,7 +229,7 @@ func run() {
 			if len(shapes) > 0 {
 				cps += len(shapes)
 				pos, err = cirno.Approximate(obj.shape, movement,
-					shapes, intensity)
+					shapes, intensity, false)
 				handleError(err)
 				movement = pos.Subtract(obj.shape.Center())
 			}

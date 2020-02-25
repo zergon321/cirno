@@ -56,7 +56,7 @@ func run() {
 	rand.Seed(time.Now().UnixNano())
 
 	space, err := cirno.NewSpace(5, 20, width*2, height*2,
-		cirno.Zero, cirno.NewVector(width, height))
+		cirno.Zero, cirno.NewVector(width, height), false)
 	handleError(err)
 
 	particles := make([]*cirno.Circle, 0)
@@ -148,7 +148,7 @@ func run() {
 				particle.Move(movement.MultiplyByScalar(-1))
 
 				pos, err := cirno.Approximate(particle, movement,
-					shapes, intensity)
+					shapes, intensity, false)
 				handleError(err)
 				movement = pos.Subtract(particle.Center())
 				particle.Move(movement)
