@@ -6,8 +6,8 @@ type Tag int32
 
 // ShouldCollide returns true if the shape should
 // collide another one accodring to their tags.
-func (tag Tag) ShouldCollide(other Tag) bool {
-	return tag&other > 0
+func (tag Tag) ShouldCollide(other Shape) bool {
+	return tag&other.GetTag() > 0
 }
 
 // SetTag assign a new value to the tag.

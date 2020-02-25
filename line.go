@@ -9,6 +9,7 @@ import (
 type Line struct {
 	p Vector
 	q Vector
+	Tag
 }
 
 // Center returns the coordinates of the middle point

@@ -6,6 +6,9 @@ type Shape interface {
 	Move(Vector) Vector
 	SetPosition(Vector) Vector
 	ContainsPoint(Vector) bool
+	GetTag() Tag
+	SetTag(Tag)
+	ShouldCollide(Shape) bool
 }
 
 // Shapes represents a list of shapes.

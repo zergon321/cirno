@@ -4,6 +4,7 @@ package cirno
 type Circle struct {
 	center Vector
 	radius float64
+	Tag
 }
 
 // Center returns the coordinates of the center
