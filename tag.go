@@ -3,8 +3,12 @@ package cirno
 // Tag identifies the kind of the shape
 // to collide other shapes.
 type Tag struct {
+	// Identity determines which other
+	// shapes can collide the present shape.
 	identity int32
-	mask     int32
+	// Mask determines which other shapes
+	// the present shape can collide.
+	mask int32
 }
 
 // ShouldCollide returns true if the shape should
