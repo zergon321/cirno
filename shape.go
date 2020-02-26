@@ -6,8 +6,10 @@ type Shape interface {
 	Move(Vector) Vector
 	SetPosition(Vector) Vector
 	ContainsPoint(Vector) bool
-	GetTag() Tag
-	SetTag(Tag)
+	GetIdentity() int32
+	SetIdentity(int32)
+	GetMask() int32
+	SetMask(int32)
 	ShouldCollide(Shape) bool
 }
 
