@@ -65,19 +65,23 @@ func (r *Rectangle) AngleRadians() float64 {
 }
 
 // Rotate rotates the whole rectangle at the specified angle (in degrees).
-func (r *Rectangle) Rotate(angle float64) {
+//
+// Returns the new angle of the rectangle (in degrees).
+func (r *Rectangle) Rotate(angle float64) float64 {
 	r.xAxis = r.xAxis.Rotate(angle)
 	r.yAxis = r.yAxis.Rotate(angle)
 
 	r.angle += angle
+	r.angle = AdjustAngle(r.angle)
+
+	return r.angle
 }
 
 // RotateRadians rotates the whole rectangle at the specified angle (in radians).
-func (r *Rectangle) RotateRadians(angle float64) {
-	r.xAxis = r.xAxis.RotateRadians(angle)
-	r.yAxis = r.yAxis.RotateRadians(angle)
-
-	r.angle += angle * RadToDeg
+//
+// Returns the new angle of the rectangle (in radians).
+func (r *Rectangle) RotateRadians(angle float64) float64 {
+	return r.Rotate(angle*RadToDeg) * DegToRad
 }
 
 // Max returns the upper right point of the rectangle with no rotation.

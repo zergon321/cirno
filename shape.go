@@ -3,7 +3,11 @@ package cirno
 // Shape represents a shape in the space.
 type Shape interface {
 	Center() Vector
+	Angle() float64
+	AngleRadians() float64
 	Move(Vector) Vector
+	Rotate(float64) float64
+	RotateRadians(float64) float64
 	SetPosition(Vector) Vector
 	ContainsPoint(Vector) bool
 	GetIdentity() int32

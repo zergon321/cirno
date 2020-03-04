@@ -88,6 +88,23 @@ func Approximate(shape Shape, diff Vector, shapes Shapes, intensity int, useTags
 	return prev, nil
 }
 
+// AdjustAngle adjusts the value of the angle so it
+// is bettween 0 and 360.
+func AdjustAngle(angle float64) float64 {
+	// Adjust the angle so its value is between 0 and 360.
+	if angle >= 360 {
+		angle = angle - float64(int64(angle/360))*360
+	} else if angle < 0 {
+		if angle <= -360 {
+			angle = angle - float64(int64(angle/360))*360
+		}
+
+		angle += 360
+	}
+
+	return angle
+}
+
 // collinearLinesWouldCollide returns true if the first line moved in the specified
 // direction from its original position would collide the second line on the way.
 func collinearLinesWouldCollide(originalPos, diff Vector, line, otherLine *Line) bool {

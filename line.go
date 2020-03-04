@@ -7,8 +7,9 @@ import (
 // Line represents a geometric euclidian line segment
 // from p to q.
 type Line struct {
-	p Vector
-	q Vector
+	p     Vector
+	q     Vector
+	angle float64
 	Tag
 }
 
@@ -16,6 +17,16 @@ type Line struct {
 // between p and q.
 func (l *Line) Center() Vector {
 	return NewVector((l.q.X+l.p.X)/2.0, (l.q.Y+l.p.Y)/2.0)
+}
+
+// Angle returns the rotation angle of the line (un degrees).
+func (l *Line) Angle() float64 {
+	return l.angle
+}
+
+// AngleRadians returns the rotation angle of the line (un radians).
+func (l *Line) AngleRadians() float64 {
+	return l.angle * DegToRad
 }
 
 // P returns the starting point of the line.
@@ -46,8 +57,11 @@ func (l *Line) SetPosition(pos Vector) Vector {
 }
 
 // Rotate rotates the line at the
-// specified angle.
-func (l *Line) Rotate(angle float64) {
+// specified angle (in degrees).
+//
+// Returns the rotation angle of
+// the line (in degrees).
+func (l *Line) Rotate(angle float64) float64 {
 	center := l.Center()
 	pv := l.p.Subtract(center)
 	qv := l.q.Subtract(center)
@@ -57,6 +71,20 @@ func (l *Line) Rotate(angle float64) {
 
 	l.p = center.Add(pv)
 	l.q = center.Add(qv)
+
+	l.angle += angle
+	l.angle = AdjustAngle(l.angle)
+
+	return l.angle
+}
+
+// RotateRadians rotates the line at the
+// specified angle (in radians).
+//
+// Returns the rotation angle of
+// the line (in radians).
+func (l *Line) RotateRadians(angle float64) float64 {
+	return l.Rotate(angle*RadToDeg) * DegToRad
 }
 
 // Length returns the length of the line.
@@ -154,8 +182,19 @@ func (l *Line) touchesOrCrosses(other *Line) bool {
 
 // NewLine returns a new line segment with the given parameters.
 func NewLine(p Vector, q Vector) *Line {
-	return &Line{
+	line := &Line{
 		p: p,
 		q: q,
 	}
+
+	pq := line.q.Subtract(line.p)
+	angle := Angle(pq, Right)
+
+	if angle < 0 {
+		line.angle = 360 + angle
+	} else {
+		line.angle = angle
+	}
+
+	return line
 }
