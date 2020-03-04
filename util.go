@@ -8,11 +8,11 @@ import (
 
 const (
 	// RadToDeg is a factor to transfrom radians to degrees.
-	RadToDeg = 180.0 / math.Pi
+	RadToDeg float64 = 180.0 / math.Pi
 	// DegToRad is a factor to transform degrees to radians.
-	DegToRad = math.Pi / 180.0
+	DegToRad float64 = math.Pi / 180.0
 	// Epsilon is the constant for approximate comparisons.
-	Epsilon = 0.000001
+	Epsilon float64 = 0.000001
 )
 
 type none struct{}

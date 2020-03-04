@@ -77,7 +77,7 @@ func (r *Rectangle) RotateRadians(angle float64) {
 	r.xAxis = r.xAxis.RotateRadians(angle)
 	r.yAxis = r.yAxis.RotateRadians(angle)
 
-	r.angle += angle
+	r.angle += angle * RadToDeg
 }
 
 // Max returns the upper right point of the rectangle with no rotation.
