@@ -100,6 +100,10 @@ func AdjustAngle(angle float64) float64 {
 		}
 
 		angle += 360
+
+		if angle >= 360 {
+			angle = angle - float64(int64(angle/360))*360
+		}
 	}
 
 	return angle
