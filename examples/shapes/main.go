@@ -20,7 +20,7 @@ import (
 const (
 	width     = 1280
 	height    = 720
-	speed     = 700
+	moveSpeed = 700
 	turnSpeed = 700
 	intensity = 100
 )
@@ -65,7 +65,7 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Cirno test",
 		Bounds: pixel.R(0, 0, width, height),
-		//VSync:  true,
+		VSync:  true,
 		//Undecorated: true,
 		//Monitor: pixelgl.PrimaryMonitor(),
 	}
@@ -142,7 +142,7 @@ func run() {
 	}
 
 	line.shape.(*cirno.Line).Rotate(-90)
-	//otherLine.shape.(*cirno.Line).Rotate(90)
+	otherLine.shape.(*cirno.Line).Rotate(90)
 	//line.shape.(*cirno.Line).Rotate(60)
 	//otherLine.shape.(*cirno.Line).Rotate(-30)
 
@@ -227,7 +227,7 @@ func run() {
 
 		// Move the controllable shape.
 		if movement != cirno.Zero || turn != 0 {
-			movement = movement.MultiplyByScalar(speed * deltaTime)
+			movement = movement.MultiplyByScalar(moveSpeed * deltaTime)
 			turn = turn * turnSpeed * deltaTime
 
 			shapes, err := space.WouldBeColliding(obj.shape,
