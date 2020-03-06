@@ -56,6 +56,18 @@ func (l *Line) SetPosition(pos Vector) Vector {
 	return l.Move(direction)
 }
 
+// SetAngle sets the rotation angle of the line
+// to the specified value (in degrees).
+func (l *Line) SetAngle(angle float64) float64 {
+	return l.Rotate(angle - l.angle)
+}
+
+// SetAngleRadians sets the rotation angle of the line
+// to the specified value (in radians).
+func (l *Line) SetAngleRadians(angle float64) float64 {
+	return l.RotateRadians(angle - l.angle)
+}
+
 // Rotate rotates the line at the
 // specified angle (in degrees).
 //

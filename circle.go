@@ -71,6 +71,24 @@ func (c *Circle) SetPosition(pos Vector) Vector {
 	return c.center
 }
 
+// SetAngle does nothing to the circle because there is
+// no sense to rotate it.
+//
+// This method is added just to match the
+// Shape interface.
+func (c *Circle) SetAngle(angle float64) float64 {
+	return 0
+}
+
+// SetAngleRadians does nothing to the circle because there is
+// no sense to rotate it.
+//
+// This method is added just to match the
+// Shape interface.
+func (c *Circle) SetAngleRadians(angle float64) float64 {
+	return 0
+}
+
 // ContainsPoint detects if the given point is inside the circle.
 func (c *Circle) ContainsPoint(point Vector) bool {
 	d := c.center.Subtract(point)

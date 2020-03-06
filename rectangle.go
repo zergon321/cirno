@@ -29,6 +29,18 @@ func (r *Rectangle) SetPosition(pos Vector) Vector {
 	return r.center
 }
 
+// SetAngle sets the angle of the rectangle to the
+// given value (in degrees).
+func (r *Rectangle) SetAngle(angle float64) float64 {
+	return r.Rotate(angle - r.angle)
+}
+
+// SetAngleRadians sets the angle of the rectangle to the
+// given value (in radians).
+func (r *Rectangle) SetAngleRadians(angle float64) float64 {
+	return r.RotateRadians(angle - r.angle)
+}
+
 // ContainsPoint detects if the given point is inside the rectangle.
 func (r *Rectangle) ContainsPoint(point Vector) bool {
 	localPoint := point.Subtract(r.center)

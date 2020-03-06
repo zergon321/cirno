@@ -9,6 +9,8 @@ type Shape interface {
 	Rotate(float64) float64
 	RotateRadians(float64) float64
 	SetPosition(Vector) Vector
+	SetAngle(float64) float64
+	SetAngleRadians(float64) float64
 	ContainsPoint(Vector) bool
 	GetIdentity() int32
 	SetIdentity(int32)
