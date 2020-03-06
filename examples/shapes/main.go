@@ -21,6 +21,7 @@ const (
 	width     = 1280
 	height    = 720
 	speed     = 700
+	turnSpeed = 700
 	intensity = 100
 )
 
@@ -198,6 +199,7 @@ func run() {
 
 		// Motion control.
 		movement := cirno.Zero
+		turn := 0.0
 
 		if win.Pressed(pixelgl.KeyUp) {
 			movement = movement.Add(cirno.Up)
@@ -215,30 +217,45 @@ func run() {
 			movement = movement.Add(cirno.Right)
 		}
 
+		if win.Pressed(pixelgl.KeyW) {
+			turn++
+		}
+
+		if win.Pressed(pixelgl.KeyX) {
+			turn--
+		}
+
 		// Move the controllable shape.
-		if movement != cirno.Zero {
+		if movement != cirno.Zero || turn != 0 {
 			movement = movement.MultiplyByScalar(speed * deltaTime)
+			turn = turn * turnSpeed * deltaTime
+
 			shapes, err := space.WouldBeColliding(obj.shape,
-				movement.MultiplyByScalar(1.5))
+				movement.MultiplyByScalar(1.5), turn)
 			handleError(err)
 
 			// If a collision occurres, the shape
 			// won't move.
 			pos := obj.shape.Center()
+			angle := obj.shape.Angle()
 
 			if len(shapes) > 0 {
 				cps += len(shapes)
-				pos, err = cirno.Approximate(obj.shape, movement,
+				pos, angle, err = cirno.Approximate(obj.shape, movement, turn,
 					shapes, intensity, false)
 				handleError(err)
 				movement = pos.Subtract(obj.shape.Center())
+				turn = angle - obj.shape.Angle()
 			}
 
 			// Consistent code block.
 			obj.shape.Move(movement)
+			obj.shape.Rotate(turn)
 			space.AdjustShapePosition(obj.shape)
 			obj.transform = obj.transform.
-				Moved(pixel.V(movement.X, movement.Y))
+				Moved(pixel.V(movement.X, movement.Y)).
+				Rotated(pixel.V(obj.shape.Center().X, obj.shape.Center().Y),
+					turn)
 			_, err = space.Update(obj.shape)
 			handleError(err)
 

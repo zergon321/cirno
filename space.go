@@ -187,9 +187,10 @@ func (space *Space) CollidingWith(shape Shape) (Shapes, error) {
 
 // WouldBeColliding checks if the given would shape would be colliding any other shape
 // if it moved in the specified direction.
-func (space *Space) WouldBeColliding(shape Shape, diff Vector) (Shapes, error) {
+func (space *Space) WouldBeColliding(shape Shape, moveDiff Vector, turnDiff float64) (Shapes, error) {
 	shapes := make(Shapes, 0)
 	originalPos := shape.Center()
+	originalAngle := shape.Angle()
 	shapeType := reflect.TypeOf(shape).Elem()
 
 	// Get all the nodes where the shape is located
@@ -200,7 +201,8 @@ func (space *Space) WouldBeColliding(shape Shape, diff Vector) (Shapes, error) {
 		return nil, err
 	}
 
-	shape.Move(diff)
+	shape.Move(moveDiff)
+	shape.Rotate(turnDiff)
 	// Make sure the shape is in bounds.
 	space.AdjustShapePosition(shape)
 	// Update the shape's position in the quad tree.
@@ -232,7 +234,7 @@ func (space *Space) WouldBeColliding(shape Shape, diff Vector) (Shapes, error) {
 				lineItem := item.(*Line)
 
 				if lineShape.CollinearTo(lineItem) &&
-					collinearLinesWouldCollide(originalPos, diff, lineShape, lineItem) {
+					collinearLinesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
 					shapes.Insert(lineItem)
 
 					continue
@@ -247,6 +249,7 @@ func (space *Space) WouldBeColliding(shape Shape, diff Vector) (Shapes, error) {
 
 	// Move the shape back.
 	shape.SetPosition(originalPos)
+	shape.SetAngle(originalAngle)
 	_, err = space.Update(shape)
 
 	if err != nil {

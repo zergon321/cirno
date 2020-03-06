@@ -38,19 +38,23 @@ func boundingBoxesIntersect(a0, a1, b0, b1 Vector) bool {
 
 // Approximate attempts to move the shape in the specified direction
 // to detect the closest point until the shape collides other shapes.
-func Approximate(shape Shape, diff Vector, shapes Shapes, intensity int, useTags bool) (Vector, error) {
+func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, intensity int, useTags bool) (Vector, float64, error) {
 	if intensity < 0 {
-		return Zero, fmt.Errorf("The value of intensity must be non-zero")
+		return Zero, 0, fmt.Errorf("The value of intensity must be non-zero")
 	}
 
 	step := 1.0 / float64(intensity)
 	originalPos := shape.Center()
-	prev := originalPos
+	originalAngle := shape.Angle()
+	prevPos := originalPos
+	prevAngle := originalAngle
 	shapeType := reflect.TypeOf(shape).Elem()
 
 	for i := 0; i < intensity; i++ {
-		current := prev.Add(diff.MultiplyByScalar(step))
-		shape.SetPosition(current)
+		currentPos := prevPos.Add(moveDiff.MultiplyByScalar(step))
+		currentAngle := prevAngle + turnDiff*step
+		shape.SetPosition(currentPos)
+		shape.SetAngle(currentAngle)
 		collisionFound := false
 
 		for other := range shapes {
@@ -61,10 +65,12 @@ func Approximate(shape Shape, diff Vector, shapes Shapes, intensity int, useTags
 			if id == "Line_Line" {
 				line := shape.(*Line)
 				otherLine := other.(*Line)
-				movement := prev.Subtract(current)
+				// Vice versa.
+				movement := currentPos.Subtract(prevPos)
+				turn := currentAngle - prevAngle
 
 				if line.CollinearTo(otherLine) &&
-					collinearLinesWouldCollide(prev, movement, line, otherLine) {
+					collinearLinesWouldCollide(prevPos, prevAngle, movement, turn, line, otherLine) {
 					collisionFound = true
 					break
 				}
@@ -80,12 +86,13 @@ func Approximate(shape Shape, diff Vector, shapes Shapes, intensity int, useTags
 			break
 		}
 
-		prev = current
+		prevPos = currentPos
+		prevAngle = currentAngle
 	}
 
 	shape.SetPosition(originalPos)
 
-	return prev, nil
+	return prevPos, prevAngle, nil
 }
 
 // AdjustAngle adjusts the value of the angle so it
@@ -111,17 +118,22 @@ func AdjustAngle(angle float64) float64 {
 
 // collinearLinesWouldCollide returns true if the first line moved in the specified
 // direction from its original position would collide the second line on the way.
-func collinearLinesWouldCollide(originalPos, diff Vector, line, otherLine *Line) bool {
+func collinearLinesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vector, turnDiff float64, line, otherLine *Line) bool {
 	tmpPos := line.Center()
+	tmpAngle := line.Angle()
 	line.SetPosition(originalPos)
+	line.SetAngle(originalAngle)
 	origP := line.p
 	origQ := line.q
 
 	otherTmpPos := otherLine.Center()
-	otherLine.Move(diff.MultiplyByScalar(-1))
+	otherTmpAngle := otherLine.Angle()
+	otherLine.Move(moveDiff.MultiplyByScalar(-1))
+	otherLine.Rotate(-turnDiff)
 	movedP := otherLine.p
 	movedQ := otherLine.q
 	otherLine.SetPosition(otherTmpPos)
+	otherLine.SetAngle(otherTmpAngle)
 
 	pp := NewLine(movedP, otherLine.p)
 	qq := NewLine(movedQ, otherLine.q)
@@ -132,6 +144,7 @@ func collinearLinesWouldCollide(originalPos, diff Vector, line, otherLine *Line)
 	}
 
 	line.SetPosition(tmpPos)
+	line.SetAngle(tmpAngle)
 	pp = NewLine(origP, line.p)
 	qq = NewLine(origQ, line.q)
 
