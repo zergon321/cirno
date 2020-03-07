@@ -228,13 +228,12 @@ func (space *Space) WouldBeColliding(shape Shape, moveDiff Vector, turnDiff floa
 			itemType := reflect.TypeOf(item).Elem()
 			id := shapeType.Name() + "_" + itemType.Name()
 
-			// Make sure collinear lines will collide.
+			// Make sure lines will collide.
 			if id == "Line_Line" {
 				lineShape := shape.(*Line)
 				lineItem := item.(*Line)
 
-				if lineShape.CollinearTo(lineItem) &&
-					collinearLinesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
+				if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
 					shapes.Insert(lineItem)
 
 					continue

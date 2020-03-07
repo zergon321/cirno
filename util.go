@@ -61,7 +61,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 			otherShapeType := reflect.TypeOf(other).Elem()
 			id := shapeType.Name() + "_" + otherShapeType.Name()
 
-			// Make sure collinear lines will collide.
+			// Make sure lines will collide.
 			if id == "Line_Line" {
 				line := shape.(*Line)
 				otherLine := other.(*Line)
@@ -69,8 +69,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 				movement := currentPos.Subtract(prevPos)
 				turn := currentAngle - prevAngle
 
-				if line.CollinearTo(otherLine) &&
-					collinearLinesWouldCollide(prevPos, prevAngle, movement, turn, line, otherLine) {
+				if linesWouldCollide(prevPos, prevAngle, movement, turn, line, otherLine) {
 					collisionFound = true
 					break
 				}
@@ -116,9 +115,9 @@ func AdjustAngle(angle float64) float64 {
 	return angle
 }
 
-// collinearLinesWouldCollide returns true if the first line moved in the specified
+// linesWouldCollide returns true if the first line moved in the specified
 // direction from its original position would collide the second line on the way.
-func collinearLinesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vector, turnDiff float64, line, otherLine *Line) bool {
+func linesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vector, turnDiff float64, line, otherLine *Line) bool {
 	tmpPos := line.Center()
 	tmpAngle := line.Angle()
 	line.SetPosition(originalPos)
