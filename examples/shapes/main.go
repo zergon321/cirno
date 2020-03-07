@@ -54,7 +54,7 @@ func loadPicture(pic string) (pixel.Picture, error) {
 }
 
 func parseFlags() {
-	flag.StringVar(&controlledShape, "shape", "circle",
+	flag.StringVar(&controlledShape, "shape", "line",
 		"The shape controlled during execution of the demo.")
 
 	flag.Parse()
@@ -255,7 +255,7 @@ func run() {
 			obj.transform = obj.transform.
 				Moved(pixel.V(movement.X, movement.Y)).
 				Rotated(pixel.V(obj.shape.Center().X, obj.shape.Center().Y),
-					turn)
+					turn*cirno.DegToRad)
 			_, err = space.Update(obj.shape)
 			handleError(err)
 
@@ -286,8 +286,15 @@ func run() {
 				fmt.Println(t.Name(), shape.Center())
 			}
 
+			fmt.Println("Recommended angle:", angle)
 			fmt.Println("Movement:", movement)
+			fmt.Println("Turn:", turn)
 			fmt.Println("Position:", obj.shape.Center())
+			fmt.Println("Angle:", obj.shape.Angle())
+
+			if cirno.ResolveCollision(line.shape, otherLine.shape, false) {
+				fmt.Println("Lol")
+			}
 		}
 
 		// Rendering.

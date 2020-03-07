@@ -90,6 +90,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 	}
 
 	shape.SetPosition(originalPos)
+	shape.SetAngle(originalAngle)
 
 	return prevPos, prevAngle, nil
 }
@@ -148,7 +149,8 @@ func linesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vecto
 	qq = NewLine(origQ, line.q)
 
 	if IntersectionLineToLine(pp, otherLine) ||
-		IntersectionLineToLine(qq, otherLine) {
+		IntersectionLineToLine(qq, otherLine) ||
+		IntersectionLineToLine(line, otherLine) {
 		return true
 	}
 
