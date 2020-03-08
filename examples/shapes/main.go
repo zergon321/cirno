@@ -54,7 +54,7 @@ func loadPicture(pic string) (pixel.Picture, error) {
 }
 
 func parseFlags() {
-	flag.StringVar(&controlledShape, "shape", "line",
+	flag.StringVar(&controlledShape, "shape", "circle",
 		"The shape controlled during execution of the demo.")
 
 	flag.Parse()
@@ -65,7 +65,7 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Cirno test",
 		Bounds: pixel.R(0, 0, width, height),
-		VSync:  true,
+		//VSync:  true,
 		//Undecorated: true,
 		//Monitor: pixelgl.PrimaryMonitor(),
 	}
@@ -231,7 +231,7 @@ func run() {
 			turn = turn * turnSpeed * deltaTime
 
 			shapes, err := space.WouldBeColliding(obj.shape,
-				movement.MultiplyByScalar(1.5), turn)
+				movement.MultiplyByScalar(1.5), turn*1.5)
 			handleError(err)
 
 			// If a collision occurres, the shape
@@ -286,6 +286,7 @@ func run() {
 				fmt.Println(t.Name(), shape.Center())
 			}
 
+			fmt.Println("Number of shapes:", len(shapes))
 			fmt.Println("Recommended angle:", angle)
 			fmt.Println("Movement:", movement)
 			fmt.Println("Turn:", turn)
