@@ -266,17 +266,25 @@ func run() {
 			// the shape position.
 			if len(shapes) > 0 {
 				obj.shape.Move(movement.MultiplyByScalar(-1))
+				obj.shape.Rotate(-turn)
 				obj.transform = obj.transform.
-					Moved(pixel.V(-movement.X, -movement.Y))
+					Moved(pixel.V(-movement.X, -movement.Y)).
+					Rotated(pixel.V(obj.shape.Center().X, obj.shape.Center().Y),
+						-turn*cirno.DegToRad)
 
-				pos, err := cirno.Approximate(obj.shape, movement,
-					shapes, intensity)
+				pos, angle, err := cirno.Approximate(obj.shape, movement, turn,
+					shapes, intensity, false)
 				handleError(err)
 				movement = pos.Subtract(obj.shape.Center())
+				turn = angle - obj.shape.Angle()
+
 				obj.shape.Move(movement)
+				obj.shape.Rotate(turn)
 				space.AdjustShapePosition(obj.shape)
 				obj.transform = obj.transform.
-					Moved(pixel.V(movement.X, movement.Y))
+					Moved(pixel.V(movement.X, movement.Y)).
+					Rotated(pixel.V(obj.shape.Center().X, obj.shape.Center().Y),
+						turn*cirno.DegToRad)
 				_, err = space.Update(obj.shape)
 				handleError(err)
 			}*/
@@ -287,7 +295,7 @@ func run() {
 			}
 
 			fmt.Println("Number of shapes:", len(shapes))
-			fmt.Println("Recommended angle:", angle)
+			//fmt.Println("Recommended angle:", angle)
 			fmt.Println("Movement:", movement)
 			fmt.Println("Turn:", turn)
 			fmt.Println("Position:", obj.shape.Center())
