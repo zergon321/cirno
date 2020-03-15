@@ -54,3 +54,55 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 
 	return hitShape
 }
+
+// Boxcast casts a box in the space and returns all the
+// shapes overlapped by this box.
+func (space *Space) Boxcast(rect *Rectangle) Shapes {
+	nodeQueue := queue.New()
+	nodeQueue.Enqueue(space.tree.root)
+	shapes := make(Shapes, 0)
+
+	for nodeQueue.Len() > 0 {
+		node := nodeQueue.Dequeue().(*quadTreeNode)
+
+		if !CollisionRectangleToRectangle(rect, node.boundary) {
+			continue
+		}
+
+		if node.northWest == nil {
+			for shape := range node.shapes {
+				if ResolveCollision(rect, shape, space.useTags) {
+					shapes.Insert(shape)
+				}
+			}
+		}
+	}
+
+	return shapes
+}
+
+// Circlecast casts a circle in the space and returns all the
+// shapes overlapped by the circle.
+func (space *Space) Circlecast(circle *Circle) Shapes {
+	nodeQueue := queue.New()
+	nodeQueue.Enqueue(space.tree.root)
+	shapes := make(Shapes, 0)
+
+	for nodeQueue.Len() > 0 {
+		node := nodeQueue.Dequeue().(*quadTreeNode)
+
+		if !CollisionRectangleToCircle(node.boundary, circle) {
+			continue
+		}
+
+		if node.northWest == nil {
+			for shape := range node.shapes {
+				if ResolveCollision(circle, shape, space.useTags) {
+					shapes.Insert(shape)
+				}
+			}
+		}
+	}
+
+	return shapes
+}
