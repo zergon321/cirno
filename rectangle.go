@@ -8,6 +8,7 @@ type Rectangle struct {
 	yAxis   Vector
 	angle   float64
 	Tag
+	data
 }
 
 // Center returns the coordinates of the center of the rectangle.

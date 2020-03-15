@@ -17,6 +17,8 @@ type Shape interface {
 	GetMask() int32
 	SetMask(int32)
 	ShouldCollide(Shape) bool
+	Data() interface{}
+	SetData(data interface{})
 }
 
 // Shapes represents a list of shapes.

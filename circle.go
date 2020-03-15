@@ -5,6 +5,7 @@ type Circle struct {
 	center Vector
 	radius float64
 	Tag
+	data
 }
 
 // Center returns the coordinates of the center

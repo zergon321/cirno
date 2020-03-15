@@ -11,6 +11,7 @@ type Line struct {
 	q     Vector
 	angle float64
 	Tag
+	data
 }
 
 // Center returns the coordinates of the middle point
