@@ -1,6 +1,8 @@
 package cirno
 
-import "github.com/golang-collections/collections/queue"
+import (
+	"github.com/golang-collections/collections/queue"
+)
 
 // Raycast casts a ray in the space and returns the hit shape closest
 // to the origin of the ray.
