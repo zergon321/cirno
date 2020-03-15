@@ -148,7 +148,7 @@ func IntersectionLineToCircle(line *Line, circle *Circle) bool {
 
 	closestPoint := line.p.Add(pq.MultiplyByScalar(t))
 
-	return SquaredDistance(circle.center, closestPoint) < circle.radius*circle.radius
+	return SquaredDistance(circle.center, closestPoint) <= circle.radius*circle.radius
 }
 
 // IntersectionLineToRectangle detects if there's an intersection between
