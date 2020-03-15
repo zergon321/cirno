@@ -50,10 +50,10 @@ func (r *Rectangle) ContainsPoint(point Vector) bool {
 	min := localRect.Min()
 	max := localRect.Max()
 
-	return min.X <= point.X &&
-		min.Y <= point.Y &&
-		point.X <= max.X &&
-		point.Y <= max.Y
+	return min.X <= localPoint.X &&
+		min.Y <= localPoint.Y &&
+		localPoint.X <= max.X &&
+		localPoint.Y <= max.Y
 }
 
 // Width returns the width of the rectangle.
