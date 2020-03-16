@@ -55,6 +55,7 @@ func run() {
 	// Raycast parameters.
 	origin := rhombus.Center()
 	direction := cirno.NewVector(0, 1)
+	distance := cirno.Distance(space.Min(), space.Max())
 
 	// Setup metrics.
 	last := time.Now()
@@ -89,16 +90,11 @@ func run() {
 		// If the shape is hit by the ray, its color is set to red.
 		hitShape := space.Raycast(origin, direction, 0, 0)
 
-		if hitShape == littleCircle {
-			fmt.Println("LOL THE FUCK")
-			hitShape = space.Raycast(origin, direction, 0, 0)
-		}
-
 		if hitShape != nil {
 			hitShape.SetData(colornames.Red)
 		}
 
-		ray := cirno.NewLine(origin, origin.Add(direction.MultiplyByScalar(rayVisibleLength)))
+		ray := cirno.NewLine(origin, origin.Add(direction.MultiplyByScalar(distance)))
 
 		// Rendering.
 		imd.Clear()
