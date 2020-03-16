@@ -27,6 +27,7 @@ const (
 
 var (
 	controlledShape string
+	vsync           bool
 )
 
 type object struct {
@@ -56,6 +57,7 @@ func loadPicture(pic string) (pixel.Picture, error) {
 func parseFlags() {
 	flag.StringVar(&controlledShape, "shape", "circle",
 		"The shape controlled during execution of the demo.")
+	flag.BoolVar(&vsync, "vsync", false, "Enable vertical synchronization.")
 
 	flag.Parse()
 }
@@ -65,7 +67,7 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Cirno test",
 		Bounds: pixel.R(0, 0, width, height),
-		//VSync:  true,
+		VSync:  vsync,
 		//Undecorated: true,
 		//Monitor: pixelgl.PrimaryMonitor(),
 	}
