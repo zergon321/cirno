@@ -15,6 +15,16 @@ type Space struct {
 	useTags bool
 }
 
+// Max returns the max point of the space.
+func (space *Space) Max() Vector {
+	return space.max
+}
+
+// Min returns the min point of the space.
+func (space *Space) Min() Vector {
+	return space.min
+}
+
 // InBounds detects if the center the given shape
 // is within the space bounds.
 func (space *Space) InBounds(shape Shape) bool {
