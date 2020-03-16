@@ -109,7 +109,7 @@ func (r *Rectangle) Min() Vector {
 		Add(r.yAxis.MultiplyByScalar(r.extents.Y)))
 }
 
-// Vertices return the array of the rectangle vertices.
+// Vertices returns the array of the rectangle vertices.
 func (r *Rectangle) Vertices() [4]Vector {
 	// Rectangle vertices.
 	a := r.center.Add(r.xAxis.MultiplyByScalar(-r.extents.X).

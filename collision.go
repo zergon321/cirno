@@ -169,20 +169,13 @@ func IntersectionLineToRectangle(line *Line, rect *Rectangle) bool {
 	}
 
 	// Rectangle vertices.
-	a := localRect.center.Add(localRect.xAxis.MultiplyByScalar(-localRect.extents.X).
-		Add(localRect.yAxis.MultiplyByScalar(-localRect.extents.Y)))
-	b := localRect.center.Add(localRect.xAxis.MultiplyByScalar(-localRect.extents.X).
-		Add(localRect.yAxis.MultiplyByScalar(localRect.extents.Y)))
-	c := localRect.center.Add(localRect.xAxis.MultiplyByScalar(localRect.extents.X).
-		Add(localRect.yAxis.MultiplyByScalar(localRect.extents.Y)))
-	d := localRect.center.Add(localRect.xAxis.MultiplyByScalar(localRect.extents.X).
-		Add(localRect.yAxis.MultiplyByScalar(-localRect.extents.Y)))
+	vertices := localRect.Vertices()
 
 	// Rectangle side.
-	ab := NewLine(a, b)
-	bc := NewLine(b, c)
-	cd := NewLine(c, d)
-	ad := NewLine(a, d)
+	ab := NewLine(vertices[0], vertices[1])
+	bc := NewLine(vertices[1], vertices[2])
+	cd := NewLine(vertices[2], vertices[3])
+	ad := NewLine(vertices[0], vertices[3])
 
 	// Check line intersection against each side.
 	return IntersectionLineToLine(localLine, ab) || IntersectionLineToLine(localLine, bc) ||
