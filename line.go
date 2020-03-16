@@ -10,7 +10,7 @@ type Line struct {
 	p     Vector
 	q     Vector
 	angle float64
-	Tag
+	tag
 	data
 }
 

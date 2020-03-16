@@ -7,7 +7,7 @@ type Rectangle struct {
 	xAxis   Vector
 	yAxis   Vector
 	angle   float64
-	Tag
+	tag
 	data
 }
 

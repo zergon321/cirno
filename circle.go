@@ -4,7 +4,7 @@ package cirno
 type Circle struct {
 	center Vector
 	radius float64
-	Tag
+	tag
 	data
 }
 

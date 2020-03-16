@@ -1,8 +1,8 @@
 package cirno
 
-// Tag identifies the kind of the shape
+// tag identifies the kind of the shape
 // to collide other shapes.
-type Tag struct {
+type tag struct {
 	// Identity determines which other
 	// shapes can collide the present shape.
 	identity int32
@@ -13,26 +13,26 @@ type Tag struct {
 
 // ShouldCollide returns true if the shape should
 // collide another one accodring to their tags.
-func (tag Tag) ShouldCollide(other Shape) bool {
-	return tag.mask&other.GetIdentity() > 0
+func (t tag) ShouldCollide(other Shape) bool {
+	return t.mask&other.GetIdentity() > 0
 }
 
 // GetIdentity returns the valye of the shape identity.
-func (tag Tag) GetIdentity() int32 {
-	return tag.identity
+func (t tag) GetIdentity() int32 {
+	return t.identity
 }
 
 // SetIdentity assigns a new value to the tag identity.
-func (tag *Tag) SetIdentity(newIdentity int32) {
-	tag.identity = newIdentity
+func (t *tag) SetIdentity(newIdentity int32) {
+	t.identity = newIdentity
 }
 
 // GetMask the value of the shape mask.
-func (tag Tag) GetMask() int32 {
-	return tag.mask
+func (t tag) GetMask() int32 {
+	return t.mask
 }
 
 // SetMask assigns a new value to the tag mask.
-func (tag *Tag) SetMask(newMask int32) {
-	tag.mask = newMask
+func (t *tag) SetMask(newMask int32) {
+	t.mask = newMask
 }
