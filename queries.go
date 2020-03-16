@@ -40,6 +40,8 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 					if !minExists {
 						minSquaredDistance = hitDistance
 						hitShape = shape
+
+						minExists = true
 					} else if hitDistance < minSquaredDistance {
 						minSquaredDistance = hitDistance
 						hitShape = shape
