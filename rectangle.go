@@ -109,6 +109,21 @@ func (r *Rectangle) Min() Vector {
 		Add(r.yAxis.MultiplyByScalar(r.extents.Y)))
 }
 
+// Vertices return the array of the rectangle vertices.
+func (r *Rectangle) Vertices() [4]Vector {
+	// Rectangle vertices.
+	a := r.center.Add(r.xAxis.MultiplyByScalar(-r.extents.X).
+		Add(r.yAxis.MultiplyByScalar(-r.extents.Y)))
+	b := r.center.Add(r.xAxis.MultiplyByScalar(-r.extents.X).
+		Add(r.yAxis.MultiplyByScalar(r.extents.Y)))
+	c := r.center.Add(r.xAxis.MultiplyByScalar(r.extents.X).
+		Add(r.yAxis.MultiplyByScalar(r.extents.Y)))
+	d := r.center.Add(r.xAxis.MultiplyByScalar(r.extents.X).
+		Add(r.yAxis.MultiplyByScalar(-r.extents.Y)))
+
+	return [4]Vector{a, b, c, d}
+}
+
 // NewRectangle returns a new rectangle with specified parameters.
 func NewRectangle(position Vector, width, height, angle float64) *Rectangle {
 	rect := new(Rectangle)
