@@ -26,6 +26,7 @@ type platform struct {
 	rect      *cirno.Rectangle
 	sprite    *pixel.Sprite
 	transform pixel.Matrix
+	batch     *pixel.Batch
 }
 
 func loadPicture(pic string) (pixel.Picture, error) {
@@ -71,11 +72,14 @@ func run() {
 	handleError(err)
 	projectileSheet, err := loadPicture("projectiles.png")
 	handleError(err)
+	beholderPic, err := loadPicture("beholder.png")
+	handleError(err)
 
 	// Create sprites and batches.
 	wallSprite := pixel.NewSprite(wallPic, pixel.R(0, 0, width, height))
 	platformBatch := pixel.NewBatch(new(pixel.TrianglesData), platformPic)
 	projectileBatch := pixel.NewBatch(new(pixel.TrianglesData), projectileSheet)
+	beholderBatch := pixel.NewBatch(new(pixel.TrianglesData), beholderPic)
 
 	// Setup metrics.
 	last := time.Now()
