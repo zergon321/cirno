@@ -1,4 +1,4 @@
-module github.com/tracer8086/cirno
+module github.com/zergon321/cirno
 
 go 1.13
 

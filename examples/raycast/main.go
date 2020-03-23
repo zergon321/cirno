@@ -8,7 +8,7 @@ import (
 	"github.com/faiface/pixel"
 	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
-	"github.com/tracer8086/cirno"
+	"github.com/zergon321/cirno"
 	"golang.org/x/image/colornames"
 )
 
