@@ -165,25 +165,26 @@ func run() {
 	beholderLeftSprite := pixel.NewSprite(beholderPic, pixel.R(0, 0, 129, 315))
 	beholderRightSprite := pixel.NewSprite(beholderPic, pixel.R(129, 0, 258, 315))
 
-	platformBatch := pixel.NewBatch(new(pixel.TrianglesData), platformPic)
 	//bulletBatch := pixel.NewBatch(new(pixel.TrianglesData), projectileSheet)
-	beholderBatch := pixel.NewBatch(new(pixel.TrianglesData), beholderPic)
 
 	// Create platforms.
 	lowerPlatform := &platform{
-		rect:      cirno.NewRectangle(cirno.NewVector(640, 180), 128, 32, 0),
-		sprite:    platformSprite,
-		transform: pixel.IM.Moved(pixel.V(640, 180)),
+		rect:   cirno.NewRectangle(cirno.NewVector(640, 40), 384, 32, 0),
+		sprite: platformSprite,
+		transform: pixel.IM.ScaledXY(pixel.V(0, 0), pixel.V(3, 1)).
+			Moved(pixel.V(640, 40)),
 	}
 	middlePlatform := &platform{
-		rect:      cirno.NewRectangle(cirno.NewVector(320, 360), 128, 32, 0),
-		sprite:    platformSprite,
-		transform: pixel.IM.Moved(pixel.V(320, 360)),
+		rect:   cirno.NewRectangle(cirno.NewVector(320, 220), 384, 32, 0),
+		sprite: platformSprite,
+		transform: pixel.IM.ScaledXY(pixel.V(0, 0), pixel.V(3, 1)).
+			Moved(pixel.V(320, 220)),
 	}
 	higherPlatform := &platform{
-		rect:      cirno.NewRectangle(cirno.NewVector(960, 540), 128, 32, 0),
-		sprite:    platformSprite,
-		transform: pixel.IM.Moved(pixel.V(960, 540)),
+		rect:   cirno.NewRectangle(cirno.NewVector(960, 400), 384, 32, 0),
+		sprite: platformSprite,
+		transform: pixel.IM.ScaledXY(pixel.V(0, 0), pixel.V(3, 1)).
+			Moved(pixel.V(960, 400)),
 	}
 
 	lowerPlatform.rect.SetIdentity(platformID)
@@ -196,17 +197,17 @@ func run() {
 
 	// Create beholders.
 	lowerBeholder := &beholder{
-		rect:      cirno.NewRectangle(cirno.NewVector(320, 534), 129, 315, 0),
-		hitCircle: cirno.NewCircle(cirno.NewVector(352, 628), 32),
+		rect:      cirno.NewRectangle(cirno.NewVector(320, 314.75), 64.5, 157.5, 0),
+		hitCircle: cirno.NewCircle(cirno.NewVector(304, 377.5), 16),
 		sprite:    beholderLeftSprite,
-		transform: pixel.IM.Moved(pixel.V(320, 534)),
+		transform: pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(320, 314.75)),
 		dead:      false,
 	}
 	higherBeholder := &beholder{
-		rect:      cirno.NewRectangle(cirno.NewVector(960, 714), 129, 315, 0),
-		hitCircle: cirno.NewCircle(cirno.NewVector(1055, 808), 32),
+		rect:      cirno.NewRectangle(cirno.NewVector(960, 494.75), 64.5, 157.5, 0),
+		hitCircle: cirno.NewCircle(cirno.NewVector(976, 557.5), 16),
 		sprite:    beholderRightSprite,
-		transform: pixel.IM.Moved(pixel.V(320, 534)),
+		transform: pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(960, 494.75)),
 		dead:      false,
 	}
 
@@ -222,9 +223,9 @@ func run() {
 
 	// Create hero.
 	hero := &player{
-		rect:      cirno.NewRectangle(cirno.NewVector(640, 228), 32, 64, 0),
+		rect:      cirno.NewRectangle(cirno.NewVector(640, 120), 64, 128, 0),
 		sprite:    testmanLeftSprite,
-		transform: pixel.IM.Moved(pixel.V(640, 228)),
+		transform: pixel.IM.Scaled(pixel.V(0, 0), 2).Moved(pixel.V(640, 120)),
 		dead:      false,
 	}
 
@@ -233,7 +234,7 @@ func run() {
 	hero.rect.SetData(hero)
 
 	// Create a new collision space.
-	space, err := cirno.NewSpace(5, 20, width*2, height*2,
+	space, err := cirno.NewSpace(5, 20, width*4, height*4,
 		cirno.Zero, cirno.NewVector(width, height), true)
 	handleError(err)
 	// Add hit shapes to the space.
@@ -251,7 +252,7 @@ func run() {
 
 	if drawWires {
 		imd = imdraw.New(nil)
-		imd.Color = colors.Green
+		imd.Color = colors.Lightgreen
 	}
 
 	for !win.Closed() {
@@ -263,17 +264,13 @@ func run() {
 		wallSprite.Draw(win, pixel.IM.Moved(pixel.V(width/2, height/2)))
 
 		// Draw platforms.
-		lowerPlatform.draw(platformBatch)
-		middlePlatform.draw(platformBatch)
-		higherPlatform.draw(platformBatch)
+		lowerPlatform.draw(win)
+		middlePlatform.draw(win)
+		higherPlatform.draw(win)
 
 		// Draw beholders.
-		lowerBeholder.draw(beholderBatch)
-		higherBeholder.draw(beholderBatch)
-
-		// Draw batches.
-		platformBatch.Draw(win)
-		beholderBatch.Draw(win)
+		lowerBeholder.draw(win)
+		higherBeholder.draw(win)
 
 		// Draw hero.
 		hero.draw(win)
