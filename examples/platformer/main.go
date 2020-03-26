@@ -171,19 +171,19 @@ func run() {
 	lowerPlatform := &platform{
 		rect:   cirno.NewRectangle(cirno.NewVector(640, 40), 384, 32, 0),
 		sprite: platformSprite,
-		transform: pixel.IM.ScaledXY(pixel.V(0, 0), pixel.V(3, 1)).
+		transform: pixel.IM.ScaledXY(pixel.ZV, pixel.V(3, 1)).
 			Moved(pixel.V(640, 40)),
 	}
 	middlePlatform := &platform{
 		rect:   cirno.NewRectangle(cirno.NewVector(320, 220), 384, 32, 0),
 		sprite: platformSprite,
-		transform: pixel.IM.ScaledXY(pixel.V(0, 0), pixel.V(3, 1)).
+		transform: pixel.IM.ScaledXY(pixel.ZV, pixel.V(3, 1)).
 			Moved(pixel.V(320, 220)),
 	}
 	higherPlatform := &platform{
 		rect:   cirno.NewRectangle(cirno.NewVector(960, 400), 384, 32, 0),
 		sprite: platformSprite,
-		transform: pixel.IM.ScaledXY(pixel.V(0, 0), pixel.V(3, 1)).
+		transform: pixel.IM.ScaledXY(pixel.ZV, pixel.V(3, 1)).
 			Moved(pixel.V(960, 400)),
 	}
 
