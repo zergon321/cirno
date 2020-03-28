@@ -25,6 +25,12 @@ func (space *Space) Min() Vector {
 	return space.min
 }
 
+// UseTags indicates whether the space relies on
+// tags for collision detection.
+func (space *Space) UseTags() bool {
+	return space.useTags
+}
+
 // InBounds detects if the center the given shape
 // is within the space bounds.
 func (space *Space) InBounds(shape Shape) bool {
