@@ -16,8 +16,12 @@ import (
 )
 
 const (
-	width           = 1280
-	height          = 720
+	width     = 1280
+	height    = 720
+	intensity = 100
+)
+
+const (
 	platformID      = 1
 	beholderID      = 1 << 1
 	beholderEyeID   = 1 << 2
@@ -64,10 +68,67 @@ func (b *bullet) draw(target pixel.Target) {
 }
 
 type player struct {
+	speed     float64
 	rect      *cirno.Rectangle
 	sprite    *pixel.Sprite
+	animation []*pixel.Sprite
 	transform pixel.Matrix
 	dead      bool
+}
+
+func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float64) error {
+	movement := cirno.Zero
+
+	// Read inputs.
+	if win.Pressed(pixelgl.KeyLeft) {
+		movement.X--
+	}
+
+	if win.Pressed(pixelgl.KeyRight) {
+		movement.X++
+	}
+
+	if movement != cirno.Zero {
+		// Update player sprite.
+		if movement.X > 0 {
+			p.sprite = p.animation[1]
+		} else if movement.X < 0 {
+			p.sprite = p.animation[0]
+		}
+
+		// Adjust movement with framerate.
+		movement = movement.MultiplyByScalar(p.speed * deltaTime)
+		shapes, err := space.WouldBeColliding(p.rect, movement, 0)
+
+		if err != nil {
+			return err
+		}
+
+		// Resolve collision.
+		if len(shapes) > 0 {
+			pos, _, err := cirno.Approximate(p.rect, movement, 0, shapes,
+				intensity, space.UseTags())
+
+			if err != nil {
+				return err
+			}
+
+			movement = pos.Subtract(p.rect.Center())
+		}
+
+		// Move sprite and hitbox.
+		prev := p.rect.Center()
+		p.rect.Move(movement)
+		space.AdjustShapePosition(p.rect)
+		p.transform = p.transform.Moved(cirnoToPixel(p.rect.Center().Subtract(prev)))
+		_, err = space.Update(p.rect)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (p *player) draw(target pixel.Target) {
@@ -158,7 +219,7 @@ func run() {
 	// Create sprites and batches.
 	wallSprite := pixel.NewSprite(wallPic, pixel.R(0, 0, width, height))
 	testmanLeftSprite := pixel.NewSprite(testmanPic, pixel.R(0, 0, 32, 64))
-	//testmanRightSprite := pixel.NewSprite(testmanPic, pixel.R(32, 0, 64, 64))
+	testmanRightSprite := pixel.NewSprite(testmanPic, pixel.R(32, 0, 64, 64))
 	//electroBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(0, 0, 64, 64))
 	//bloodBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(64, 0, 192, 64))
 	platformSprite := pixel.NewSprite(platformPic, pixel.R(0, 0, 128, 32))
@@ -223,9 +284,11 @@ func run() {
 
 	// Create hero.
 	hero := &player{
-		rect:      cirno.NewRectangle(cirno.NewVector(640, 120), 64, 128, 0),
+		speed:     500,
+		rect:      cirno.NewRectangle(cirno.NewVector(640, 121), 64, 128, 0),
 		sprite:    testmanLeftSprite,
-		transform: pixel.IM.Scaled(pixel.V(0, 0), 2).Moved(pixel.V(640, 120)),
+		animation: []*pixel.Sprite{testmanLeftSprite, testmanRightSprite},
+		transform: pixel.IM.Scaled(pixel.V(0, 0), 2).Moved(pixel.V(640, 121)),
 		dead:      false,
 	}
 
@@ -259,7 +322,8 @@ func run() {
 		deltaTime := time.Since(last).Seconds()
 		last = time.Now()
 
-		fmt.Println("Delta:", deltaTime)
+		err = hero.update(win, space, deltaTime)
+		handleError(err)
 
 		wallSprite.Draw(win, pixel.IM.Moved(pixel.V(width/2, height/2)))
 
@@ -302,6 +366,10 @@ func run() {
 func main() {
 	parseFlags()
 	pixelgl.Run(run)
+}
+
+func cirnoToPixel(vec cirno.Vector) pixel.Vec {
+	return pixel.V(vec.X, vec.Y)
 }
 
 func handleError(err error) {
