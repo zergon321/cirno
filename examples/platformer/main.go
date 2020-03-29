@@ -69,13 +69,15 @@ func (b *bullet) draw(target pixel.Target) {
 }
 
 type player struct {
-	speed     float64
-	jumpSpeed float64
-	rect      *cirno.Rectangle
-	sprite    *pixel.Sprite
-	animation []*pixel.Sprite
-	transform pixel.Matrix
-	dead      bool
+	speed            float64
+	jumpAcceleration float64
+	verticalSpeed    float64
+	terminalSpeed    float64
+	rect             *cirno.Rectangle
+	sprite           *pixel.Sprite
+	animation        []*pixel.Sprite
+	transform        pixel.Matrix
+	dead             bool
 }
 
 func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float64) error {
@@ -90,13 +92,38 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		movement.X++
 	}
 
-	if win.JustPressed(pixelgl.KeyUp) {
-		movement.Y++
+	// Find out if player is grounded.
+	grounded := false
+	leftRayOrigin := cirno.NewVector(p.rect.Center().X-p.rect.Width()/2, p.rect.Center().Y)
+	rightRayOrigin := cirno.NewVector(p.rect.Center().X+p.rect.Width()/2, p.rect.Center().Y)
+	leftShape := space.Raycast(leftRayOrigin, cirno.Down,
+		p.rect.Height()/2+4, p.rect.GetMask())
+	rightShape := space.Raycast(rightRayOrigin, cirno.Down,
+		p.rect.Height()/2+4, p.rect.GetMask())
+
+	if leftShape != nil || rightShape != nil {
+		grounded = true
+	}
+
+	// Compute vertical speed.
+	if grounded {
+		if win.JustPressed(pixelgl.KeyUp) {
+			p.verticalSpeed = p.jumpAcceleration
+			fmt.Println(p.verticalSpeed)
+		} else {
+			p.verticalSpeed = 0
+		}
+	} else {
+		p.verticalSpeed += gravity * deltaTime
+
+		if p.verticalSpeed < p.terminalSpeed*deltaTime {
+			p.verticalSpeed = p.terminalSpeed * deltaTime
+		}
 	}
 
 	// Adjust movement with framerate.
-	movement = movement.MultiplyByScalar(p.speed * deltaTime)
-	movement.Y = gravity * deltaTime
+	movement.X *= p.speed * deltaTime
+	movement.Y = p.verticalSpeed
 
 	if movement != cirno.Zero {
 		// Update player sprite.
@@ -114,26 +141,14 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 
 		// Resolve collision.
 		if len(shapes) > 0 {
-			temp := movement.Y
-			movement.Y = 0
-			newShapes, err := space.WouldBeColliding(p.rect, movement, 0)
+			pos, _, err := cirno.Approximate(p.rect, movement, 0, shapes,
+				intensity, space.UseTags())
 
 			if err != nil {
 				return err
 			}
 
-			// If we can't go up or down.
-			if len(newShapes) > 0 {
-				movement.Y = temp
-				pos, _, err := cirno.Approximate(p.rect, movement, 0, shapes,
-					intensity, space.UseTags())
-
-				if err != nil {
-					return err
-				}
-
-				movement = pos.Subtract(p.rect.Center())
-			}
+			movement = pos.Subtract(p.rect.Center())
 		}
 
 		// Move sprite and hitbox.
@@ -304,13 +319,15 @@ func run() {
 
 	// Create hero.
 	hero := &player{
-		speed:     500,
-		jumpSpeed: 2300 * 2,
-		rect:      cirno.NewRectangle(cirno.NewVector(640, 121), 64, 128, 0),
-		sprite:    testmanLeftSprite,
-		animation: []*pixel.Sprite{testmanLeftSprite, testmanRightSprite},
-		transform: pixel.IM.Scaled(pixel.V(0, 0), 2).Moved(pixel.V(640, 121)),
-		dead:      false,
+		speed:            500,
+		jumpAcceleration: 80,
+		verticalSpeed:    gravity,
+		terminalSpeed:    gravity,
+		rect:             cirno.NewRectangle(cirno.NewVector(640, 121), 64, 128, 0),
+		sprite:           testmanLeftSprite,
+		animation:        []*pixel.Sprite{testmanLeftSprite, testmanRightSprite},
+		transform:        pixel.IM.Scaled(pixel.V(0, 0), 2).Moved(pixel.V(640, 121)),
+		dead:             false,
 	}
 
 	hero.rect.SetIdentity(playerID)
