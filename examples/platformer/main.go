@@ -18,7 +18,8 @@ import (
 const (
 	width     = 1280
 	height    = 720
-	intensity = 100
+	intensity = 1000
+	gravity   = -500
 )
 
 const (
@@ -69,6 +70,7 @@ func (b *bullet) draw(target pixel.Target) {
 
 type player struct {
 	speed     float64
+	jumpSpeed float64
 	rect      *cirno.Rectangle
 	sprite    *pixel.Sprite
 	animation []*pixel.Sprite
@@ -88,6 +90,14 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		movement.X++
 	}
 
+	if win.JustPressed(pixelgl.KeyUp) {
+		movement.Y++
+	}
+
+	// Adjust movement with framerate.
+	movement = movement.MultiplyByScalar(p.speed * deltaTime)
+	movement.Y = gravity * deltaTime
+
 	if movement != cirno.Zero {
 		// Update player sprite.
 		if movement.X > 0 {
@@ -96,8 +106,6 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 			p.sprite = p.animation[0]
 		}
 
-		// Adjust movement with framerate.
-		movement = movement.MultiplyByScalar(p.speed * deltaTime)
 		shapes, err := space.WouldBeColliding(p.rect, movement, 0)
 
 		if err != nil {
@@ -106,14 +114,26 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 
 		// Resolve collision.
 		if len(shapes) > 0 {
-			pos, _, err := cirno.Approximate(p.rect, movement, 0, shapes,
-				intensity, space.UseTags())
+			temp := movement.Y
+			movement.Y = 0
+			newShapes, err := space.WouldBeColliding(p.rect, movement, 0)
 
 			if err != nil {
 				return err
 			}
 
-			movement = pos.Subtract(p.rect.Center())
+			// If we can't go up or down.
+			if len(newShapes) > 0 {
+				movement.Y = temp
+				pos, _, err := cirno.Approximate(p.rect, movement, 0, shapes,
+					intensity, space.UseTags())
+
+				if err != nil {
+					return err
+				}
+
+				movement = pos.Subtract(p.rect.Center())
+			}
 		}
 
 		// Move sprite and hitbox.
@@ -285,6 +305,7 @@ func run() {
 	// Create hero.
 	hero := &player{
 		speed:     500,
+		jumpSpeed: 2300 * 2,
 		rect:      cirno.NewRectangle(cirno.NewVector(640, 121), 64, 128, 0),
 		sprite:    testmanLeftSprite,
 		animation: []*pixel.Sprite{testmanLeftSprite, testmanRightSprite},
