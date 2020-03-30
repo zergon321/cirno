@@ -72,23 +72,9 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 	if leftShape == nil {
 		br.direction = cirno.Right
 		br.sprite = br.anim[1]
-
-		br.hitCircle.Move(cirno.Right.MultiplyByScalar(br.hitCircle.Radius() * 2))
-		_, err := space.Update(br.hitCircle)
-
-		if err != nil {
-			return err
-		}
 	} else if rightShape == nil {
 		br.direction = cirno.Left
 		br.sprite = br.anim[0]
-
-		br.hitCircle.Move(cirno.Left.MultiplyByScalar(br.hitCircle.Radius() * 2))
-		_, err := space.Update(br.hitCircle)
-
-		if err != nil {
-			return err
-		}
 	}
 
 	movement := br.direction.MultiplyByScalar(br.speed * deltaTime)
@@ -107,16 +93,19 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 	br.transform = br.transform.Moved(cirnoToPixel(br.rect.Center().Subtract(prev)))
 
 	// Move hit circle.
-	prev = br.hitCircle.Center()
-	br.hitCircle.Move(movement)
-	space.AdjustShapePosition(br.hitCircle)
-	_, err = space.Update(br.hitCircle)
+	hitCirclePos := cirno.NewVector(br.rect.Center().X,
+		br.rect.Center().Y+br.rect.Height()/2-br.hitCircle.Radius())
 
-	if err != nil {
-		return err
+	if br.direction == cirno.Right {
+		hitCirclePos.X += br.hitCircle.Radius()
+	} else if br.direction == cirno.Left {
+		hitCirclePos.X -= br.hitCircle.Radius()
 	}
 
-	return nil
+	br.hitCircle.SetPosition(hitCirclePos)
+	_, err = space.Update(br.hitCircle)
+
+	return err
 }
 
 func (br *beholder) draw(target pixel.Target) {
