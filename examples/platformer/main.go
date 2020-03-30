@@ -46,14 +46,15 @@ func (pl *platform) draw(target pixel.Target) {
 }
 
 type beholder struct {
-	rect      *cirno.Rectangle
-	hitCircle *cirno.Circle
-	sprite    *pixel.Sprite
-	anim      []*pixel.Sprite
-	direction cirno.Vector
-	speed     float64
-	transform pixel.Matrix
-	dead      bool
+	rect           *cirno.Rectangle
+	hitCircle      *cirno.Circle
+	sprite         *pixel.Sprite
+	anim           []*pixel.Sprite
+	direction      cirno.Vector
+	speed          float64
+	spawnedBullets []*bloodBullet
+	transform      pixel.Matrix
+	dead           bool
 }
 
 func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
@@ -79,18 +80,27 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 
 	movement := br.direction.MultiplyByScalar(br.speed * deltaTime)
 
-	// Move rect.
-	prev := br.rect.Center()
-	br.rect.Move(movement)
-	space.AdjustShapePosition(br.rect)
-	_, err := space.Update(br.rect)
+	// Detect player and stop if player detected.
+	player := space.Raycast(br.rect.Center(), br.direction, 384, playerID)
 
-	if err != nil {
-		return err
+	if player != nil {
+		movement = cirno.Zero
 	}
 
-	// Move sprite.
-	br.transform = br.transform.Moved(cirnoToPixel(br.rect.Center().Subtract(prev)))
+	if movement != cirno.Zero {
+		// Move rect.
+		prev := br.rect.Center()
+		br.rect.Move(movement)
+		space.AdjustShapePosition(br.rect)
+		_, err := space.Update(br.rect)
+
+		if err != nil {
+			return err
+		}
+
+		// Move sprite.
+		br.transform = br.transform.Moved(cirnoToPixel(br.rect.Center().Subtract(prev)))
+	}
 
 	// Move hit circle.
 	hitCirclePos := cirno.NewVector(br.rect.Center().X,
@@ -103,7 +113,7 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 	}
 
 	br.hitCircle.SetPosition(hitCirclePos)
-	_, err = space.Update(br.hitCircle)
+	_, err := space.Update(br.hitCircle)
 
 	return err
 }
@@ -112,15 +122,44 @@ func (br *beholder) draw(target pixel.Target) {
 	br.sprite.Draw(target, br.transform)
 }
 
-type bullet struct {
-	hitShape  *cirno.Shape
+type bloodBullet struct {
+	spawner   *beholder
+	hitLine   *cirno.Line
 	sprite    *pixel.Sprite
-	transform pixel.Matrix
 	direction cirno.Vector
+	speed     float64
+	transform pixel.Matrix
 }
 
-func (b *bullet) draw(target pixel.Target) {
-	b.sprite.Draw(target, b.transform)
+func (bb *bloodBullet) update(space *cirno.Space, deltaTime float64) error {
+	movement := bb.direction.MultiplyByScalar(bb.speed * deltaTime)
+	bb.hitLine.Move(movement)
+	_, err := space.Update(bb.hitLine)
+
+	if err != nil {
+		return err
+	}
+
+	// If the bullet is off-screen, remove it.
+	if bb.hitLine.Center().X > width || bb.hitLine.Center().X < 0 {
+		ind := -1
+
+		for i, bullet := range bb.spawner.spawnedBullets {
+			if bullet == bb {
+				ind = i
+				break
+			}
+		}
+
+		bb.spawner.spawnedBullets = append(bb.spawner.spawnedBullets[:ind],
+			bb.spawner.spawnedBullets[ind+1:]...)
+	}
+
+	return nil
+}
+
+func (bb *bloodBullet) draw(target pixel.Target) {
+	bb.sprite.Draw(target, bb.transform)
 }
 
 type player struct {
@@ -422,11 +461,11 @@ func run() {
 		deltaTime := time.Since(last).Seconds()
 		last = time.Now()
 
-		err = hero.update(win, space, deltaTime)
-		handleError(err)
 		err = lowerBeholder.update(space, deltaTime)
 		handleError(err)
 		err = higherBeholder.update(space, deltaTime)
+		handleError(err)
+		err = hero.update(win, space, deltaTime)
 		handleError(err)
 
 		wallSprite.Draw(win, pixel.IM.Moved(pixel.V(width/2, height/2)))
