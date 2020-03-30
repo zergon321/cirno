@@ -49,8 +49,74 @@ type beholder struct {
 	rect      *cirno.Rectangle
 	hitCircle *cirno.Circle
 	sprite    *pixel.Sprite
+	anim      []*pixel.Sprite
+	direction cirno.Vector
+	speed     float64
 	transform pixel.Matrix
 	dead      bool
+}
+
+func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
+	// Cast rays to detect if the beholder is on the edge of the platform.
+	leftRayOrigin := cirno.NewVector(br.rect.Center().X-br.rect.Width()/2,
+		br.rect.Center().Y)
+	rightRayOrigin := cirno.NewVector(br.rect.Center().X+br.rect.Width()/2,
+		br.rect.Center().Y)
+	leftShape := space.Raycast(leftRayOrigin, cirno.Down, br.rect.Height()/2+4,
+		br.rect.GetMask())
+	rightShape := space.Raycast(rightRayOrigin, cirno.Down, br.rect.Height()/2+4,
+		br.rect.GetMask())
+
+	// Change movement direction
+	// and hit circle position.
+	if leftShape == nil {
+		br.direction = cirno.Right
+		br.sprite = br.anim[1]
+
+		br.hitCircle.Move(cirno.Right.MultiplyByScalar(br.hitCircle.Radius() * 2))
+		_, err := space.Update(br.hitCircle)
+
+		if err != nil {
+			return err
+		}
+	} else if rightShape == nil {
+		br.direction = cirno.Left
+		br.sprite = br.anim[0]
+
+		br.hitCircle.Move(cirno.Left.MultiplyByScalar(br.hitCircle.Radius() * 2))
+		_, err := space.Update(br.hitCircle)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	movement := br.direction.MultiplyByScalar(br.speed * deltaTime)
+
+	// Move rect.
+	prev := br.rect.Center()
+	br.rect.Move(movement)
+	space.AdjustShapePosition(br.rect)
+	_, err := space.Update(br.rect)
+
+	if err != nil {
+		return err
+	}
+
+	// Move sprite.
+	br.transform = br.transform.Moved(cirnoToPixel(br.rect.Center().Subtract(prev)))
+
+	// Move hit circle.
+	prev = br.hitCircle.Center()
+	br.hitCircle.Move(movement)
+	space.AdjustShapePosition(br.hitCircle)
+	_, err = space.Update(br.hitCircle)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (br *beholder) draw(target pixel.Target) {
@@ -93,17 +159,15 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 	}
 
 	// Find out if player is grounded.
-	grounded := false
-	leftRayOrigin := cirno.NewVector(p.rect.Center().X-p.rect.Width()/2, p.rect.Center().Y)
-	rightRayOrigin := cirno.NewVector(p.rect.Center().X+p.rect.Width()/2, p.rect.Center().Y)
+	leftRayOrigin := cirno.NewVector(p.rect.Center().X-p.rect.Width()/2,
+		p.rect.Center().Y)
+	rightRayOrigin := cirno.NewVector(p.rect.Center().X+p.rect.Width()/2,
+		p.rect.Center().Y)
 	leftShape := space.Raycast(leftRayOrigin, cirno.Down,
 		p.rect.Height()/2+4, p.rect.GetMask())
 	rightShape := space.Raycast(rightRayOrigin, cirno.Down,
 		p.rect.Height()/2+4, p.rect.GetMask())
-
-	if leftShape != nil || rightShape != nil {
-		grounded = true
-	}
+	grounded := leftShape != nil || rightShape != nil
 
 	// Compute vertical speed.
 	if grounded {
@@ -293,17 +357,23 @@ func run() {
 
 	// Create beholders.
 	lowerBeholder := &beholder{
-		rect:      cirno.NewRectangle(cirno.NewVector(320, 314.75), 64.5, 157.5, 0),
-		hitCircle: cirno.NewCircle(cirno.NewVector(304, 377.5), 16),
+		rect:      cirno.NewRectangle(cirno.NewVector(320, 316), 64.5, 157.5, 0),
+		hitCircle: cirno.NewCircle(cirno.NewVector(304, 378.75), 16),
 		sprite:    beholderLeftSprite,
-		transform: pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(320, 314.75)),
+		anim:      []*pixel.Sprite{beholderLeftSprite, beholderRightSprite},
+		speed:     250,
+		direction: cirno.Left,
+		transform: pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(320, 316)),
 		dead:      false,
 	}
 	higherBeholder := &beholder{
-		rect:      cirno.NewRectangle(cirno.NewVector(960, 494.75), 64.5, 157.5, 0),
-		hitCircle: cirno.NewCircle(cirno.NewVector(976, 557.5), 16),
+		rect:      cirno.NewRectangle(cirno.NewVector(960, 496), 64.5, 157.5, 0),
+		hitCircle: cirno.NewCircle(cirno.NewVector(976, 558.75), 16),
 		sprite:    beholderRightSprite,
-		transform: pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(960, 494.75)),
+		anim:      []*pixel.Sprite{beholderLeftSprite, beholderRightSprite},
+		speed:     300,
+		direction: cirno.Right,
+		transform: pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(960, 496)),
 		dead:      false,
 	}
 
@@ -311,6 +381,9 @@ func run() {
 	lowerBeholder.hitCircle.SetIdentity(beholderEyeID)
 	higherBeholder.rect.SetIdentity(beholderID)
 	higherBeholder.hitCircle.SetIdentity(beholderEyeID)
+
+	lowerBeholder.rect.SetMask(platformID)
+	higherBeholder.rect.SetMask(platformID)
 
 	lowerBeholder.rect.SetData(lowerBeholder)
 	lowerBeholder.hitCircle.SetData(lowerBeholder)
@@ -361,6 +434,10 @@ func run() {
 		last = time.Now()
 
 		err = hero.update(win, space, deltaTime)
+		handleError(err)
+		err = lowerBeholder.update(space, deltaTime)
+		handleError(err)
+		err = higherBeholder.update(space, deltaTime)
 		handleError(err)
 
 		wallSprite.Draw(win, pixel.IM.Moved(pixel.V(width/2, height/2)))
