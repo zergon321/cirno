@@ -85,6 +85,7 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 
 	if player != nil {
 		movement = cirno.Zero
+		// TODO: shoot at the player if he is detected.
 	}
 
 	if movement != cirno.Zero {
@@ -253,6 +254,8 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		if err != nil {
 			return err
 		}
+
+		// TODO: check collision with bullets.
 	}
 
 	return nil
