@@ -28,6 +28,7 @@ const (
 	beholderEyeID   = 1 << 2
 	playerID        = 1 << 3
 	electroBulletID = 1 << 4
+	bloodBulletID   = 1 << 5
 )
 
 var (
@@ -256,6 +257,17 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		}
 
 		// TODO: check collision with bullets.
+		shapes, err = space.CollidingWith(p.rect)
+
+		if err != nil {
+			return err
+		}
+
+		bullets := shapes.FilterByIdentity(bloodBulletID)
+
+		if len(bullets) > 0 {
+			p.dead = true
+		}
 	}
 
 	return nil
