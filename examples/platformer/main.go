@@ -95,19 +95,20 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 		if br.bulletTimer == nil {
 			// Spawn the first bullet.
 			bulletPos := br.rect.Center().
-				Add(cirno.Right.MultiplyByScalar(br.rect.Width() / 2)).
-				Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W() / 2))
+				Add(br.direction.MultiplyByScalar(br.rect.Width() / 4)).
+				Add(br.direction.MultiplyByScalar(br.bulletSprite.Frame().W() / 4))
 			bullet := &bloodBullet{
 				spawner: br,
 				hitLine: cirno.NewLine(
-					bulletPos.Add(cirno.Left.MultiplyByScalar(br.bulletSprite.Frame().W()/2)),
-					bulletPos.Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W()/2)),
+					bulletPos.Add(cirno.Left.MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
+					bulletPos.Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
 				),
 				sprite:    br.bulletSprite,
 				direction: br.direction,
 				speed:     br.bulletSpeed,
 				transform: pixel.IM.Moved(cirnoToPixel(bulletPos)),
 			}
+			bullet.transform = bullet.transform.Scaled(cirnoToPixel(bullet.hitLine.Center()), 0.5)
 
 			bullet.hitLine.SetIdentity(bloodBulletID)
 			err := space.Add(bullet.hitLine)
@@ -125,19 +126,20 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 			// Shoot a new bullet after the cooldown.
 			case <-br.bulletTimer:
 				bulletPos := br.rect.Center().
-					Add(cirno.Right.MultiplyByScalar(br.rect.Width() / 2)).
-					Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W() / 2))
+					Add(br.direction.MultiplyByScalar(br.rect.Width() / 4)).
+					Add(br.direction.MultiplyByScalar(br.bulletSprite.Frame().W() / 4))
 				bullet := &bloodBullet{
 					spawner: br,
 					hitLine: cirno.NewLine(
-						bulletPos.Add(cirno.Left.MultiplyByScalar(br.bulletSprite.Frame().W()/2)),
-						bulletPos.Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W()/2)),
+						bulletPos.Add(cirno.Left.MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
+						bulletPos.Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
 					),
 					sprite:    br.bulletSprite,
 					direction: br.direction,
 					speed:     br.bulletSpeed,
 					transform: pixel.IM.Moved(cirnoToPixel(bulletPos)),
 				}
+				bullet.transform = bullet.transform.Scaled(cirnoToPixel(bullet.hitLine.Center()), 0.5)
 
 				bullet.hitLine.SetIdentity(bloodBulletID)
 				err := space.Add(bullet.hitLine)
@@ -145,6 +147,8 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 				if err != nil {
 					return err
 				}
+
+				br.spawnedBullets = append(br.spawnedBullets, bullet)
 
 			default:
 			}
@@ -200,6 +204,7 @@ type bloodBullet struct {
 }
 
 func (bb *bloodBullet) update(space *cirno.Space, deltaTime float64) error {
+	// Move the bullet.
 	movement := bb.direction.MultiplyByScalar(bb.speed * deltaTime)
 	bb.hitLine.Move(movement)
 	_, err := space.Update(bb.hitLine)
@@ -207,6 +212,8 @@ func (bb *bloodBullet) update(space *cirno.Space, deltaTime float64) error {
 	if err != nil {
 		return err
 	}
+
+	bb.transform = bb.transform.Moved(cirnoToPixel(movement))
 
 	// If the bullet is off screen, remove it.
 	if bb.hitLine.Center().X > width || bb.hitLine.Center().X < 0 {
@@ -221,6 +228,11 @@ func (bb *bloodBullet) update(space *cirno.Space, deltaTime float64) error {
 
 		bb.spawner.spawnedBullets = append(bb.spawner.spawnedBullets[:ind],
 			bb.spawner.spawnedBullets[ind+1:]...)
+		err = space.Remove(bb.hitLine)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -348,6 +360,11 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 
 				bullet.spawner.spawnedBullets = append(bullet.spawner.spawnedBullets[:ind],
 					bullet.spawner.spawnedBullets[ind+1:]...)
+				err = space.Remove(bullet.hitLine)
+
+				if err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -445,7 +462,7 @@ func run() {
 	testmanLeftSprite := pixel.NewSprite(testmanPic, pixel.R(0, 0, 32, 64))
 	testmanRightSprite := pixel.NewSprite(testmanPic, pixel.R(32, 0, 64, 64))
 	//electroBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(0, 0, 64, 64))
-	bloodBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(64, 0, 192, 64))
+	bloodBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(64, 0, 256, 64))
 	platformSprite := pixel.NewSprite(platformPic, pixel.R(0, 0, 128, 32))
 	beholderLeftSprite := pixel.NewSprite(beholderPic, pixel.R(0, 0, 129, 315))
 	beholderRightSprite := pixel.NewSprite(beholderPic, pixel.R(129, 0, 258, 315))
