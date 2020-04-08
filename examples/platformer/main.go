@@ -53,7 +53,11 @@ type beholder struct {
 	anim           []*pixel.Sprite
 	direction      cirno.Vector
 	speed          float64
+	bulletSprite   *pixel.Sprite
+	bulletSpeed    float64
+	bulletCooldown time.Duration
 	spawnedBullets []*bloodBullet
+	bulletTimer    <-chan time.Time
 	transform      pixel.Matrix
 	dead           bool
 }
@@ -87,6 +91,68 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 	if player != nil {
 		movement = cirno.Zero
 		// TODO: shoot at the player if he is detected.
+
+		if br.bulletTimer == nil {
+			// Spawn the first bullet.
+			bulletPos := br.rect.Center().
+				Add(cirno.Right.MultiplyByScalar(br.rect.Width() / 2)).
+				Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W() / 2))
+			bullet := &bloodBullet{
+				spawner: br,
+				hitLine: cirno.NewLine(
+					bulletPos.Add(cirno.Left.MultiplyByScalar(br.bulletSprite.Frame().W()/2)),
+					bulletPos.Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W()/2)),
+				),
+				sprite:    br.bulletSprite,
+				direction: br.direction,
+				speed:     br.bulletSpeed,
+				transform: pixel.IM.Moved(cirnoToPixel(bulletPos)),
+			}
+
+			bullet.hitLine.SetIdentity(bloodBulletID)
+			err := space.Add(bullet.hitLine)
+
+			if err != nil {
+				return err
+			}
+
+			br.spawnedBullets = append(br.spawnedBullets, bullet)
+			// Start the cooldown timer to shoot bullets
+			// with timelapse.
+			br.bulletTimer = time.Tick(br.bulletCooldown)
+		} else {
+			select {
+			// Shoot a new bullet after the cooldown.
+			case <-br.bulletTimer:
+				bulletPos := br.rect.Center().
+					Add(cirno.Right.MultiplyByScalar(br.rect.Width() / 2)).
+					Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W() / 2))
+				bullet := &bloodBullet{
+					spawner: br,
+					hitLine: cirno.NewLine(
+						bulletPos.Add(cirno.Left.MultiplyByScalar(br.bulletSprite.Frame().W()/2)),
+						bulletPos.Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W()/2)),
+					),
+					sprite:    br.bulletSprite,
+					direction: br.direction,
+					speed:     br.bulletSpeed,
+					transform: pixel.IM.Moved(cirnoToPixel(bulletPos)),
+				}
+
+				bullet.hitLine.SetIdentity(bloodBulletID)
+				err := space.Add(bullet.hitLine)
+
+				if err != nil {
+					return err
+				}
+
+			default:
+			}
+		}
+	} else {
+		// Stop shooting if player
+		// is off sight.
+		br.bulletTimer = nil
 	}
 
 	if movement != cirno.Zero {
@@ -142,7 +208,7 @@ func (bb *bloodBullet) update(space *cirno.Space, deltaTime float64) error {
 		return err
 	}
 
-	// If the bullet is off-screen, remove it.
+	// If the bullet is off screen, remove it.
 	if bb.hitLine.Center().X > width || bb.hitLine.Center().X < 0 {
 		ind := -1
 
@@ -263,10 +329,26 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 			return err
 		}
 
-		bullets := shapes.FilterByIdentity(bloodBulletID)
+		bulletShapes := shapes.FilterByIdentity(bloodBulletID)
 
-		if len(bullets) > 0 {
+		if len(bulletShapes) > 0 {
 			p.dead = true
+
+			// Remove all the bullets that hit the player.
+			for bulletShape := range bulletShapes {
+				bullet := bulletShape.Data().(*bloodBullet)
+				ind := -1
+
+				for i := range bullet.spawner.spawnedBullets {
+					if bullet.spawner.spawnedBullets[i] == bullet {
+						ind = i
+						break
+					}
+				}
+
+				bullet.spawner.spawnedBullets = append(bullet.spawner.spawnedBullets[:ind],
+					bullet.spawner.spawnedBullets[ind+1:]...)
+			}
 		}
 	}
 
@@ -351,8 +433,8 @@ func run() {
 	handleError(err)
 	platformPic, err := loadPicture("platform.png")
 	handleError(err)
-	//projectileSheet, err := loadPicture("projectiles.png")
-	//handleError(err)
+	projectileSheet, err := loadPicture("projectiles.png")
+	handleError(err)
 	beholderPic, err := loadPicture("beholders.png")
 	handleError(err)
 	testmanPic, err := loadPicture("testmen.png")
@@ -363,7 +445,7 @@ func run() {
 	testmanLeftSprite := pixel.NewSprite(testmanPic, pixel.R(0, 0, 32, 64))
 	testmanRightSprite := pixel.NewSprite(testmanPic, pixel.R(32, 0, 64, 64))
 	//electroBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(0, 0, 64, 64))
-	//bloodBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(64, 0, 192, 64))
+	bloodBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(64, 0, 192, 64))
 	platformSprite := pixel.NewSprite(platformPic, pixel.R(0, 0, 128, 32))
 	beholderLeftSprite := pixel.NewSprite(beholderPic, pixel.R(0, 0, 129, 315))
 	beholderRightSprite := pixel.NewSprite(beholderPic, pixel.R(129, 0, 258, 315))
@@ -400,24 +482,34 @@ func run() {
 
 	// Create beholders.
 	lowerBeholder := &beholder{
-		rect:      cirno.NewRectangle(cirno.NewVector(320, 316), 64.5, 157.5, 0),
-		hitCircle: cirno.NewCircle(cirno.NewVector(304, 378.75), 16),
-		sprite:    beholderLeftSprite,
-		anim:      []*pixel.Sprite{beholderLeftSprite, beholderRightSprite},
-		speed:     250,
-		direction: cirno.Left,
-		transform: pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(320, 316)),
-		dead:      false,
+		rect:           cirno.NewRectangle(cirno.NewVector(320, 316), 64.5, 157.5, 0),
+		hitCircle:      cirno.NewCircle(cirno.NewVector(304, 378.75), 16),
+		sprite:         beholderLeftSprite,
+		anim:           []*pixel.Sprite{beholderLeftSprite, beholderRightSprite},
+		bulletSprite:   bloodBulletSprite,
+		bulletSpeed:    400,
+		bulletCooldown: 600 * time.Millisecond,
+		bulletTimer:    nil,
+		spawnedBullets: make([]*bloodBullet, 0),
+		speed:          250,
+		direction:      cirno.Left,
+		transform:      pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(320, 316)),
+		dead:           false,
 	}
 	higherBeholder := &beholder{
-		rect:      cirno.NewRectangle(cirno.NewVector(960, 496), 64.5, 157.5, 0),
-		hitCircle: cirno.NewCircle(cirno.NewVector(976, 558.75), 16),
-		sprite:    beholderRightSprite,
-		anim:      []*pixel.Sprite{beholderLeftSprite, beholderRightSprite},
-		speed:     300,
-		direction: cirno.Right,
-		transform: pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(960, 496)),
-		dead:      false,
+		rect:           cirno.NewRectangle(cirno.NewVector(960, 496), 64.5, 157.5, 0),
+		hitCircle:      cirno.NewCircle(cirno.NewVector(976, 558.75), 16),
+		sprite:         beholderRightSprite,
+		anim:           []*pixel.Sprite{beholderLeftSprite, beholderRightSprite},
+		bulletSprite:   bloodBulletSprite,
+		bulletSpeed:    300,
+		bulletCooldown: 400 * time.Millisecond,
+		bulletTimer:    nil,
+		spawnedBullets: make([]*bloodBullet, 0),
+		speed:          300,
+		direction:      cirno.Right,
+		transform:      pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(960, 496)),
+		dead:           false,
 	}
 
 	lowerBeholder.rect.SetIdentity(beholderID)
@@ -476,10 +568,24 @@ func run() {
 		deltaTime := time.Since(last).Seconds()
 		last = time.Now()
 
+		// Update beholders.
 		err = lowerBeholder.update(space, deltaTime)
 		handleError(err)
 		err = higherBeholder.update(space, deltaTime)
 		handleError(err)
+
+		// Update bullets.
+		for _, bullet := range lowerBeholder.spawnedBullets {
+			err = bullet.update(space, deltaTime)
+			handleError(err)
+		}
+
+		for _, bullet := range higherBeholder.spawnedBullets {
+			err = bullet.update(space, deltaTime)
+			handleError(err)
+		}
+
+		// Update hero.
 		err = hero.update(win, space, deltaTime)
 		handleError(err)
 
@@ -493,6 +599,15 @@ func run() {
 		// Draw beholders.
 		lowerBeholder.draw(win)
 		higherBeholder.draw(win)
+
+		// Draw bullets.
+		for _, bullet := range lowerBeholder.spawnedBullets {
+			bullet.draw(win)
+		}
+
+		for _, bullet := range higherBeholder.spawnedBullets {
+			bullet.draw(win)
+		}
 
 		// Draw hero.
 		hero.draw(win)
