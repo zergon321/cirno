@@ -108,9 +108,12 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 				speed:     br.bulletSpeed,
 				transform: pixel.IM.Moved(cirnoToPixel(bulletPos)),
 			}
-			bullet.transform = bullet.transform.Scaled(cirnoToPixel(bullet.hitLine.Center()), 0.5)
+			bullet.transform = bullet.transform.Scaled(cirnoToPixel(bulletPos), 0.5)
 
+			bullet.hitLine.SetData(bullet)
 			bullet.hitLine.SetIdentity(bloodBulletID)
+			bullet.hitLine.SetMask(playerID)
+
 			err := space.Add(bullet.hitLine)
 
 			if err != nil {
@@ -141,7 +144,10 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 				}
 				bullet.transform = bullet.transform.Scaled(cirnoToPixel(bullet.hitLine.Center()), 0.5)
 
+				bullet.hitLine.SetData(bullet)
 				bullet.hitLine.SetIdentity(bloodBulletID)
+				bullet.hitLine.SetMask(playerID)
+
 				err := space.Add(bullet.hitLine)
 
 				if err != nil {
@@ -187,7 +193,48 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 	br.hitCircle.SetPosition(hitCirclePos)
 	_, err := space.Update(br.hitCircle)
 
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Check collision with player's bullets.
+	shapes, err := space.CollidingWith(br.hitCircle)
+
+	if err != nil {
+		return err
+	}
+
+	bulletShapes := shapes.FilterByIdentity(electroBulletID)
+
+	if err != nil {
+		return err
+	}
+
+	if len(bulletShapes) > 0 {
+		br.dead = true
+
+		for shape := range bulletShapes {
+			bullet := shape.Data().(*electroBullet)
+			ind := -1
+
+			for i, eb := range bullet.spawner.spawnedBullets {
+				if eb == bullet {
+					ind = i
+					break
+				}
+			}
+
+			bullet.spawner.spawnedBullets = append(bullet.spawner.spawnedBullets[:ind],
+				bullet.spawner.spawnedBullets[ind+1:]...)
+			err = space.Remove(bullet.hitCircle)
+
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }
 
 func (br *beholder) draw(target pixel.Target) {
@@ -242,11 +289,63 @@ func (bb *bloodBullet) draw(target pixel.Target) {
 	bb.sprite.Draw(target, bb.transform)
 }
 
+type electroBullet struct {
+	spawner   *player
+	hitCircle *cirno.Circle
+	sprite    *pixel.Sprite
+	direction cirno.Vector
+	speed     float64
+	transform pixel.Matrix
+}
+
+func (eb *electroBullet) update(space *cirno.Space, deltaTime float64) error {
+	// Move the bullet.
+	movement := eb.direction.MultiplyByScalar(eb.speed * deltaTime)
+	eb.hitCircle.Move(movement)
+	_, err := space.Update(eb.hitCircle)
+
+	if err != nil {
+		return err
+	}
+
+	eb.transform = eb.transform.Moved(cirnoToPixel(movement))
+
+	// Remove the bullet if it's out of bounds.
+	if eb.hitCircle.Center().X > width || eb.hitCircle.Center().X < 0 {
+		ind := -1
+
+		for i, bullet := range eb.spawner.spawnedBullets {
+			if bullet == eb {
+				ind = i
+				break
+			}
+		}
+
+		eb.spawner.spawnedBullets = append(eb.spawner.spawnedBullets[:ind],
+			eb.spawner.spawnedBullets[ind+1:]...)
+		err = space.Remove(eb.hitCircle)
+
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (eb *electroBullet) draw(target pixel.Target) {
+	eb.sprite.Draw(target, eb.transform)
+}
+
 type player struct {
 	speed            float64
 	jumpAcceleration float64
 	verticalSpeed    float64
 	terminalSpeed    float64
+	aim              cirno.Vector
+	bulletSpeed      float64
+	bulletSprite     *pixel.Sprite
+	spawnedBullets   []*electroBullet
 	rect             *cirno.Rectangle
 	sprite           *pixel.Sprite
 	animation        []*pixel.Sprite
@@ -257,13 +356,46 @@ type player struct {
 func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float64) error {
 	movement := cirno.Zero
 
-	// Read inputs.
+	// Read movement inputs to change aim
+	// and animation.
 	if win.Pressed(pixelgl.KeyLeft) {
 		movement.X--
+		p.aim = cirno.Left
+		p.sprite = p.animation[1]
 	}
 
 	if win.Pressed(pixelgl.KeyRight) {
 		movement.X++
+		p.aim = cirno.Right
+		p.sprite = p.animation[0]
+	}
+
+	// If player shoots a bullet.
+	if win.JustPressed(pixelgl.KeyZ) {
+		bulletPos := p.rect.Center().
+			Add(p.aim.MultiplyByScalar(p.rect.Width() / 4)).
+			Add(p.aim.MultiplyByScalar(p.bulletSprite.Frame().W() / 4))
+		bullet := &electroBullet{
+			spawner:   p,
+			hitCircle: cirno.NewCircle(bulletPos, p.bulletSprite.Frame().W()/4),
+			sprite:    p.bulletSprite,
+			direction: p.aim,
+			speed:     p.bulletSpeed,
+			transform: pixel.IM.Moved(cirnoToPixel(bulletPos)),
+		}
+		bullet.transform = bullet.transform.Scaled(cirnoToPixel(bulletPos), 0.5)
+
+		bullet.hitCircle.SetData(bullet)
+		bullet.hitCircle.SetIdentity(electroBulletID)
+		bullet.hitCircle.SetMask(beholderEyeID)
+
+		err := space.Add(bullet.hitCircle)
+
+		if err != nil {
+			return err
+		}
+
+		p.spawnedBullets = append(p.spawnedBullets, bullet)
 	}
 
 	// Find out if player is grounded.
@@ -281,7 +413,6 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 	if grounded {
 		if win.JustPressed(pixelgl.KeyUp) {
 			p.verticalSpeed = p.jumpAcceleration
-			fmt.Println(p.verticalSpeed)
 		} else {
 			p.verticalSpeed = 0
 		}
@@ -333,38 +464,41 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		if err != nil {
 			return err
 		}
+	}
 
-		// TODO: check collision with bullets.
-		shapes, err = space.CollidingWith(p.rect)
+	// Check collision with bullets.
+	shapes, err := space.CollidingWith(p.rect)
 
-		if err != nil {
-			return err
-		}
+	if err != nil {
+		return err
+	}
 
-		bulletShapes := shapes.FilterByIdentity(bloodBulletID)
+	bulletShapes := shapes.FilterByIdentity(bloodBulletID)
 
-		if len(bulletShapes) > 0 {
-			p.dead = true
+	fmt.Println(len(shapes), len(bulletShapes))
 
-			// Remove all the bullets that hit the player.
-			for bulletShape := range bulletShapes {
-				bullet := bulletShape.Data().(*bloodBullet)
-				ind := -1
+	// If a bullet or more hit the player.
+	if len(bulletShapes) > 0 {
+		p.dead = true
 
-				for i := range bullet.spawner.spawnedBullets {
-					if bullet.spawner.spawnedBullets[i] == bullet {
-						ind = i
-						break
-					}
+		// Remove all the bullets that hit the player.
+		for bulletShape := range bulletShapes {
+			bullet := bulletShape.Data().(*bloodBullet)
+			ind := -1
+
+			for i := range bullet.spawner.spawnedBullets {
+				if bullet.spawner.spawnedBullets[i] == bullet {
+					ind = i
+					break
 				}
+			}
 
-				bullet.spawner.spawnedBullets = append(bullet.spawner.spawnedBullets[:ind],
-					bullet.spawner.spawnedBullets[ind+1:]...)
-				err = space.Remove(bullet.hitLine)
+			bullet.spawner.spawnedBullets = append(bullet.spawner.spawnedBullets[:ind],
+				bullet.spawner.spawnedBullets[ind+1:]...)
+			err = space.Remove(bullet.hitLine)
 
-				if err != nil {
-					return err
-				}
+			if err != nil {
+				return err
 			}
 		}
 	}
@@ -461,7 +595,7 @@ func run() {
 	wallSprite := pixel.NewSprite(wallPic, pixel.R(0, 0, width, height))
 	testmanLeftSprite := pixel.NewSprite(testmanPic, pixel.R(0, 0, 32, 64))
 	testmanRightSprite := pixel.NewSprite(testmanPic, pixel.R(32, 0, 64, 64))
-	//electroBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(0, 0, 64, 64))
+	electroBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(0, 0, 64, 64))
 	bloodBulletSprite := pixel.NewSprite(projectileSheet, pixel.R(64, 0, 256, 64))
 	platformSprite := pixel.NewSprite(platformPic, pixel.R(0, 0, 128, 32))
 	beholderLeftSprite := pixel.NewSprite(beholderPic, pixel.R(0, 0, 129, 315))
@@ -548,6 +682,10 @@ func run() {
 		jumpAcceleration: 80,
 		verticalSpeed:    gravity,
 		terminalSpeed:    gravity,
+		aim:              cirno.Left,
+		bulletSprite:     electroBulletSprite,
+		bulletSpeed:      200,
+		spawnedBullets:   make([]*electroBullet, 0),
 		rect:             cirno.NewRectangle(cirno.NewVector(640, 121), 64, 128, 0),
 		sprite:           testmanLeftSprite,
 		animation:        []*pixel.Sprite{testmanLeftSprite, testmanRightSprite},
@@ -556,7 +694,7 @@ func run() {
 	}
 
 	hero.rect.SetIdentity(playerID)
-	hero.rect.SetMask(platformID | electroBulletID)
+	hero.rect.SetMask(platformID)
 	hero.rect.SetData(hero)
 
 	// Create a new collision space.
@@ -591,7 +729,7 @@ func run() {
 		err = higherBeholder.update(space, deltaTime)
 		handleError(err)
 
-		// Update bullets.
+		// Update beholder bullets.
 		for _, bullet := range lowerBeholder.spawnedBullets {
 			err = bullet.update(space, deltaTime)
 			handleError(err)
@@ -606,6 +744,12 @@ func run() {
 		err = hero.update(win, space, deltaTime)
 		handleError(err)
 
+		// Update hero bullets.
+		for _, bullet := range hero.spawnedBullets {
+			err = bullet.update(space, deltaTime)
+			handleError(err)
+		}
+
 		wallSprite.Draw(win, pixel.IM.Moved(pixel.V(width/2, height/2)))
 
 		// Draw platforms.
@@ -617,7 +761,10 @@ func run() {
 		lowerBeholder.draw(win)
 		higherBeholder.draw(win)
 
-		// Draw bullets.
+		// Draw hero.
+		hero.draw(win)
+
+		// Draw beholder bullets.
 		for _, bullet := range lowerBeholder.spawnedBullets {
 			bullet.draw(win)
 		}
@@ -626,8 +773,9 @@ func run() {
 			bullet.draw(win)
 		}
 
-		// Draw hero.
-		hero.draw(win)
+		for _, bullet := range hero.spawnedBullets {
+			bullet.draw(win)
+		}
 
 		if drawWires {
 			imd.Clear()
