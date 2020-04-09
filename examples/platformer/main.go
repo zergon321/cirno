@@ -210,6 +210,7 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 		return err
 	}
 
+	// Remove all the bullets that hit the beholder.
 	if len(bulletShapes) > 0 {
 		br.dead = true
 
@@ -231,6 +232,13 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 			if err != nil {
 				return err
 			}
+		}
+
+		// Remove beholder's hit shapes.
+		err = space.Remove(br.rect, br.hitCircle)
+
+		if err != nil {
+			return err
 		}
 	}
 
@@ -501,6 +509,13 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 				return err
 			}
 		}
+
+		// Remove player's hitbox.
+		err = space.Remove(p.rect)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -724,10 +739,15 @@ func run() {
 		last = time.Now()
 
 		// Update beholders.
-		err = lowerBeholder.update(space, deltaTime)
-		handleError(err)
-		err = higherBeholder.update(space, deltaTime)
-		handleError(err)
+		if !lowerBeholder.dead {
+			err = lowerBeholder.update(space, deltaTime)
+			handleError(err)
+		}
+
+		if !higherBeholder.dead {
+			err = higherBeholder.update(space, deltaTime)
+			handleError(err)
+		}
 
 		// Update beholder bullets.
 		for _, bullet := range lowerBeholder.spawnedBullets {
@@ -741,8 +761,10 @@ func run() {
 		}
 
 		// Update hero.
-		err = hero.update(win, space, deltaTime)
-		handleError(err)
+		if !hero.dead {
+			err = hero.update(win, space, deltaTime)
+			handleError(err)
+		}
 
 		// Update hero bullets.
 		for _, bullet := range hero.spawnedBullets {
@@ -758,11 +780,18 @@ func run() {
 		higherPlatform.draw(win)
 
 		// Draw beholders.
-		lowerBeholder.draw(win)
-		higherBeholder.draw(win)
+		if !lowerBeholder.dead {
+			lowerBeholder.draw(win)
+		}
+
+		if !higherBeholder.dead {
+			higherBeholder.draw(win)
+		}
 
 		// Draw hero.
-		hero.draw(win)
+		if !hero.dead {
+			hero.draw(win)
+		}
 
 		// Draw beholder bullets.
 		for _, bullet := range lowerBeholder.spawnedBullets {
