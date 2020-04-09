@@ -483,8 +483,6 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 
 	bulletShapes := shapes.FilterByIdentity(bloodBulletID)
 
-	fmt.Println(len(shapes), len(bulletShapes))
-
 	// If a bullet or more hit the player.
 	if len(bulletShapes) > 0 {
 		p.dead = true
