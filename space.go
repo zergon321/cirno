@@ -192,6 +192,26 @@ func (space *Space) CollidingWith(shape Shape) (Shapes, error) {
 
 	for _, area := range nodes {
 		for item := range area.shapes {
+			if item != shape && ResolveCollision(item, shape, space.useTags) {
+				shapes.Insert(item)
+			}
+		}
+	}
+
+	return shapes, nil
+}
+
+// CollidedBy returns the set of shapes collided by the given shape.
+func (space *Space) CollidedBy(shape Shape) (Shapes, error) {
+	shapes := make(Shapes, 0)
+	nodes, err := space.tree.search(shape)
+
+	if err != nil {
+		return nil, err
+	}
+
+	for _, area := range nodes {
+		for item := range area.shapes {
 			if item != shape && ResolveCollision(shape, item, space.useTags) {
 				shapes.Insert(item)
 			}
