@@ -444,7 +444,7 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 			p.sprite = p.animation[0]
 		}
 
-		shapes, err := space.WouldBeColliding(p.rect, movement, 0)
+		shapes, err := space.WouldBeCollidedBy(p.rect, movement, 0)
 
 		if err != nil {
 			return err

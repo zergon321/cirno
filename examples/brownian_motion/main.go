@@ -122,7 +122,7 @@ func run() {
 			direction := cirno.NewVector(1, 0).Rotate(angle)
 			movement := direction.MultiplyByScalar(speed * deltaTime)
 
-			/*shapes, err := space.WouldBeColliding(particle, movement)
+			/*shapes, err := space.WouldBeCollidedBy(particle, movement, 0.0)
 			handleError(err)
 
 			// If a collision occurred, the particle won't

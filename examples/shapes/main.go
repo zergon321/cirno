@@ -232,7 +232,7 @@ func run() {
 			movement = movement.MultiplyByScalar(moveSpeed * deltaTime)
 			turn = turn * turnSpeed * deltaTime
 
-			shapes, err := space.WouldBeColliding(obj.shape, movement, turn)
+			shapes, err := space.WouldBeCollidedBy(obj.shape, movement, turn)
 			handleError(err)
 
 			// If a collision occurres, the shape

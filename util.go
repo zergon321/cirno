@@ -65,6 +65,12 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 			if id == "Line_Line" {
 				line := shape.(*Line)
 				otherLine := other.(*Line)
+
+				// Compare line tags.
+				if useTags && !line.ShouldCollide(otherLine) {
+					continue
+				}
+
 				// Vice versa.
 				movement := currentPos.Subtract(prevPos)
 				turn := currentAngle - prevAngle

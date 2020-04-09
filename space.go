@@ -221,9 +221,9 @@ func (space *Space) CollidedBy(shape Shape) (Shapes, error) {
 	return shapes, nil
 }
 
-// WouldBeColliding checks if the given would shape would be colliding any other shape
-// if it moved in the specified direction.
-func (space *Space) WouldBeColliding(shape Shape, moveDiff Vector, turnDiff float64) (Shapes, error) {
+// WouldBeCollidedBy returns all the shapes that would be collided by
+// the given shape if it moved in the specified direction.
+func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff float64) (Shapes, error) {
 	shapes := make(Shapes, 0)
 	originalPos := shape.Center()
 	originalAngle := shape.Angle()
@@ -269,6 +269,11 @@ func (space *Space) WouldBeColliding(shape Shape, moveDiff Vector, turnDiff floa
 				lineShape := shape.(*Line)
 				lineItem := item.(*Line)
 
+				// Check line tags.
+				if space.useTags && !lineShape.ShouldCollide(lineItem) {
+					continue
+				}
+
 				if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
 					shapes.Insert(lineItem)
 
@@ -277,6 +282,84 @@ func (space *Space) WouldBeColliding(shape Shape, moveDiff Vector, turnDiff floa
 			}
 
 			if ResolveCollision(shape, item, space.useTags) {
+				shapes.Insert(item)
+			}
+		}
+	}
+
+	// Move the shape back.
+	shape.SetPosition(originalPos)
+	shape.SetAngle(originalAngle)
+	_, err = space.Update(shape)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return shapes, nil
+}
+
+// WouldBeCollidingWith returns all the shapes that would be colliding the given one
+// if it moved in the specified direction.
+func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff float64) (Shapes, error) {
+	shapes := make(Shapes, 0)
+	originalPos := shape.Center()
+	originalAngle := shape.Angle()
+	shapeType := reflect.TypeOf(shape).Elem()
+
+	// Get all the nodes where the shape is located
+	// before movement.
+	areas, err := space.tree.search(shape)
+
+	if err != nil {
+		return nil, err
+	}
+
+	shape.Move(moveDiff)
+	shape.Rotate(turnDiff)
+	// Make sure the shape is in bounds.
+	space.AdjustShapePosition(shape)
+	// Update the shape's position in the quad tree.
+	nodes, err := space.Update(shape)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Add shapes from the previous nodes.
+	for _, area := range areas {
+		nodes[area.boundary.center] = area.shapes.Copy()
+	}
+
+	// Search for collisions in the nodes
+	// the shape belongs to.
+	for _, area := range nodes {
+		for item := range area {
+			if item == shape {
+				continue
+			}
+
+			itemType := reflect.TypeOf(item).Elem()
+			id := shapeType.Name() + "_" + itemType.Name()
+
+			// Make sure lines will collide.
+			if id == "Line_Line" {
+				lineShape := shape.(*Line)
+				lineItem := item.(*Line)
+
+				// Check line tags.
+				if space.useTags && !lineItem.ShouldCollide(lineShape) {
+					continue
+				}
+
+				if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
+					shapes.Insert(lineItem)
+
+					continue
+				}
+			}
+
+			if ResolveCollision(item, shape, space.useTags) {
 				shapes.Insert(item)
 			}
 		}
