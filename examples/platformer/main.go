@@ -106,7 +106,7 @@ func run() {
 	handleError(err)
 
 	// Load pictures.
-	wallPic, err := loadPicture("wall.png")
+	wallPic, err := loadPicture("wooden-wall.png")
 	handleError(err)
 	platformPic, err := loadPicture("platform.png")
 	handleError(err)
