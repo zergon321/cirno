@@ -12,7 +12,7 @@ const (
 	// DegToRad is a factor to transform degrees to radians.
 	DegToRad float64 = math.Pi / 180.0
 	// Epsilon is the constant for approximate comparisons.
-	Epsilon float64 = 0.000001
+	Epsilon float64 = 0.01
 )
 
 type none struct{}
