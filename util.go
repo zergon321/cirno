@@ -38,9 +38,11 @@ func boundingBoxesIntersect(a0, a1, b0, b1 Vector) bool {
 
 // Approximate attempts to move the shape in the specified direction
 // to detect the closest point until the shape collides other shapes.
-func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, intensity int, useTags bool) (Vector, float64, error) {
+func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, intensity int, useTags bool) (Vector, float64, Shape, error) {
+	var foundShape Shape
+
 	if intensity < 0 {
-		return Zero, 0, fmt.Errorf("The value of intensity must be non-zero")
+		return Zero, 0, nil, fmt.Errorf("The value of intensity must be non-zero")
 	}
 
 	step := 1.0 / float64(intensity)
@@ -77,12 +79,16 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 
 				if linesWouldCollide(prevPos, prevAngle, movement, turn, line, otherLine) {
 					collisionFound = true
+					foundShape = otherLine
+
 					break
 				}
 			}
 
 			if ResolveCollision(shape, other, useTags) {
 				collisionFound = true
+				foundShape = other
+
 				break
 			}
 		}
@@ -98,7 +104,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 	shape.SetPosition(originalPos)
 	shape.SetAngle(originalAngle)
 
-	return prevPos, prevAngle, nil
+	return prevPos, prevAngle, foundShape, nil
 }
 
 // AdjustAngle adjusts the value of the angle so it
