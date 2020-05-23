@@ -113,7 +113,7 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 
 		// Resolve collision.
 		if len(shapes) > 0 {
-			pos, _, err := cirno.Approximate(p.rect, movement, 0, shapes,
+			pos, _, _, err := cirno.Approximate(p.rect, movement, 0, shapes,
 				intensity, space.UseTags())
 
 			if err != nil {

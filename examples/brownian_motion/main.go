@@ -147,7 +147,7 @@ func run() {
 				cps += len(shapes)
 				particle.Move(movement.MultiplyByScalar(-1))
 
-				pos, _, err := cirno.Approximate(particle, movement, 0,
+				pos, _, _, err := cirno.Approximate(particle, movement, 0,
 					shapes, intensity, false)
 				handleError(err)
 				movement = pos.Subtract(particle.Center())

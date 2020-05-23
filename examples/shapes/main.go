@@ -242,7 +242,7 @@ func run() {
 
 			if len(shapes) > 0 {
 				cps += len(shapes)
-				pos, angle, err = cirno.Approximate(obj.shape, movement, turn,
+				pos, angle, _, err = cirno.Approximate(obj.shape, movement, turn,
 					shapes, intensity, false)
 				handleError(err)
 				movement = pos.Subtract(obj.shape.Center())
