@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/tracer8086/cirno"
+	"github.com/zergon321/cirno"
 )
 
 func TestShouldCollide(t *testing.T) {

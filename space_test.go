@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tracer8086/cirno"
+	"github.com/zergon321/cirno"
 )
 
 func TestSpaceAddShapes(t *testing.T) {
@@ -153,7 +153,7 @@ func TestGetShapesCollidingWithShape(t *testing.T) {
 	err = space.Add(line)
 	assert.Nil(t, err)
 
-	shapes, err := space.WouldBeColliding(rect, cirno.NewVector(0, 0.2171355), 0)
+	shapes, err := space.WouldBeCollidedBy(rect, cirno.NewVector(0, 0.2171355), 0)
 
 	assert.Nil(t, err)
 	assert.Equal(t, len(shapes), 1)

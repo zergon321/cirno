@@ -5,7 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/tracer8086/cirno"
+	"github.com/zergon321/cirno"
 )
 
 func TestRaycast(t *testing.T) {
