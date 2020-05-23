@@ -26,6 +26,9 @@ func (line *Line) NormalTo(shape Shape) Vector {
 	switch other := shape.(type) {
 	case *Circle:
 		return line.NormalToCircle(other)
+
+	case *Line:
+		return line.NormalToLine(other)
 	}
 
 	return Zero
@@ -49,4 +52,12 @@ func (circle *Circle) NormalToLine(line *Line) Vector {
 // to the circle.
 func (line *Line) NormalToCircle(circle *Circle) Vector {
 	return circle.NormalToLine(line).MultiplyByScalar(-1)
+}
+
+// NormalToLine returns the normal from the given line
+// to the other line.
+func (line *Line) NormalToLine(other *Line) Vector {
+	point := line.ProjectPoint(other.Center())
+
+	return other.Center().Subtract(point).Normalize()
 }
