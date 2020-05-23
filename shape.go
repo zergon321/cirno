@@ -19,6 +19,7 @@ type Shape interface {
 	ShouldCollide(Shape) bool
 	Data() interface{}
 	SetData(data interface{})
+	NormalTo(Shape) Vector
 }
 
 // Shapes represents a list of shapes.
