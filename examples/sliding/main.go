@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"image/color"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -12,11 +13,10 @@ import (
 )
 
 const (
-	width            = 1280
-	height           = 720
-	moveSpeed        = 400
-	rayVisibleLength = 30
-	intensity        = 500
+	width     = 1280
+	height    = 720
+	moveSpeed = 400
+	intensity = 500
 )
 
 func cirnoToPixel(vector cirno.Vector) pixel.Vec {
@@ -37,11 +37,18 @@ func run() {
 
 	// Setup physics.
 	circleBig := cirno.NewCircle(cirno.NewVector(350, 250), 50)
+	circleBig.SetData(colors.Red)
 	circleLittle := cirno.NewCircle(cirno.NewVector(1000, 600), 20)
+	circleLittle.SetData(colors.Blue)
+	circleTemp := cirno.NewCircle(cirno.NewVector(470, 250), 50)
+	circleTemp.SetData(colors.Coral)
+	line := cirno.NewLine(cirno.NewVector(800, 200), cirno.NewVector(1200, 400))
+	line.SetData(colors.Green)
+
 	space, err := cirno.NewSpace(1, 10, width*2, height*2,
 		cirno.Zero, cirno.NewVector(width, height), false)
 	handleError(err)
-	err = space.Add(circleBig, circleLittle)
+	err = space.Add(circleBig, circleLittle, line, circleTemp)
 	handleError(err)
 
 	// Setup metrics.
@@ -86,21 +93,28 @@ func run() {
 			// If a collision occurres, the shape
 			// will slide.
 			pos := circleLittle.Center()
+			var foundShape cirno.Shape
 
 			if len(shapes) > 0 {
-				pos, _, err = cirno.Approximate(circleLittle, movement, 0.0,
+				pos, _, foundShape, err = cirno.Approximate(circleLittle, movement, 0.0,
 					shapes, intensity, false)
 				handleError(err)
 
 				// If there's no opportunity to approximate,
 				// do sliding.
 				if circleLittle.Center().Subtract(pos).Magnitude() < cirno.Epsilon {
-					normal := circleBig.NormalToCircle(circleLittle)
+					normal := foundShape.NormalTo(circleLittle)
 					movement = movement.Subtract(normal.
 						MultiplyByScalar(cirno.Dot(movement, normal)))
-				} else {
-					movement = pos.Subtract(circleLittle.Center())
+
+					// Make sure the shape won't collide other shapes
+					// while sliding.
+					shapes.Remove(foundShape)
+					pos, _, _, err = cirno.Approximate(circleLittle, movement, 0.0,
+						shapes, intensity, false)
 				}
+
+				movement = pos.Subtract(circleLittle.Center())
 			}
 
 			circleLittle.Move(movement)
@@ -112,13 +126,39 @@ func run() {
 		// Rendering.
 		imd.Clear()
 
-		imd.Color = colors.Red
-		imd.Push(cirnoToPixel(circleBig.Center()))
-		imd.Circle(circleBig.Radius(), 0)
+		for shape := range space.Shapes() {
+			imd.Color = shape.Data().(color.RGBA)
 
-		imd.Color = colors.Blue
-		imd.Push(cirnoToPixel(circleLittle.Center()))
-		imd.Circle(circleLittle.Radius(), 0)
+			switch shape.(type) {
+			case *cirno.Line:
+				lineShape := shape.(*cirno.Line)
+
+				imd.Push(
+					pixel.V(lineShape.P().X, lineShape.P().Y),
+					pixel.V(lineShape.Q().X, lineShape.Q().Y),
+				)
+				imd.Line(2)
+
+			case *cirno.Circle:
+				circleShape := shape.(*cirno.Circle)
+
+				imd.Push(pixel.V(circleShape.Center().X,
+					circleShape.Center().Y))
+				imd.Circle(circleShape.Radius(), 0)
+
+			case *cirno.Rectangle:
+				rectShape := shape.(*cirno.Rectangle)
+				vertices := rectShape.Vertices()
+
+				imd.Push(
+					pixel.V(vertices[0].X, vertices[0].Y),
+					pixel.V(vertices[1].X, vertices[1].Y),
+					pixel.V(vertices[2].X, vertices[2].Y),
+					pixel.V(vertices[3].X, vertices[3].Y),
+				)
+				imd.Polygon(0)
+			}
+		}
 
 		if movement != cirno.Zero {
 			imd.Color = colors.Brown
