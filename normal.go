@@ -1,5 +1,9 @@
 package cirno
 
+import (
+	"math"
+)
+
 // NormalTo returns the normal from the given circle
 // to the other shape.
 func (circle *Circle) NormalTo(shape Shape) Vector {
@@ -45,7 +49,28 @@ func (circle *Circle) NormalToCircle(other *Circle) Vector {
 func (circle *Circle) NormalToLine(line *Line) Vector {
 	closestPoint := line.ProjectPoint(circle.center)
 
-	return closestPoint.Subtract(circle.center).Normalize()
+	if !line.ContainsPoint(closestPoint) {
+		cp := line.P().Subtract(circle.Center())
+		cq := line.Q().Subtract(circle.Center())
+
+		if cp.SquaredMagnitude() < cq.SquaredMagnitude() {
+			closestPoint = cp
+		} else {
+			closestPoint = cq
+		}
+	}
+
+	normal := closestPoint.Subtract(circle.center).Normalize()
+
+	if math.IsNaN(normal.X) {
+		normal.X = 0.0
+	}
+
+	if math.IsNaN(normal.Y) {
+		normal.Y = 0.0
+	}
+
+	return normal
 }
 
 // NormalToCircle returns the normal from the given line
