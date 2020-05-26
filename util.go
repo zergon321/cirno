@@ -104,6 +104,10 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 	shape.SetPosition(originalPos)
 	shape.SetAngle(originalAngle)
 
+	if math.IsNaN(prevPos.X) || math.IsNaN(prevPos.Y) {
+		return Zero, 0.0, nil, fmt.Errorf("Couldn't approximate the shape")
+	}
+
 	return prevPos, prevAngle, foundShape, nil
 }
 
