@@ -117,6 +117,7 @@ func (l *Line) ContainsPoint(point Vector) bool {
 	pTmp := point.Subtract(l.p)
 	r := Cross(lTmp.q, pTmp)
 
+	// TODO: check if line's AABB contains the point.
 	return math.Abs(r) < Epsilon
 }
 
