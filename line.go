@@ -116,9 +116,13 @@ func (l *Line) ContainsPoint(point Vector) bool {
 	lTmp := NewLine(Zero, l.q.Subtract(l.p))
 	pTmp := point.Subtract(l.p)
 	r := Cross(lTmp.q, pTmp)
+	min, max := l.GetBoundingBox()
 
-	// TODO: check if line's AABB contains the point.
-	return math.Abs(r) < Epsilon
+	return math.Abs(r) < Epsilon &&
+		point.X >= min.X &&
+		point.Y >= min.Y &&
+		point.X <= max.X &&
+		point.Y <= max.Y
 }
 
 // Orientation returns 0 if the point is collinear to the line,
