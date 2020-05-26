@@ -206,10 +206,6 @@ func run() {
 			imd.Line(2)
 		}
 
-		imd.Color = colors.Red
-		imd.Push(pixel.V(446.91, 284.63))
-		imd.Circle(3, 0)
-
 		imd.Draw(win)
 
 		win.Update()
