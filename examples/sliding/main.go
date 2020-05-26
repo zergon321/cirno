@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"image/color"
 	"time"
@@ -19,6 +20,19 @@ const (
 	intensity = 500
 )
 
+var (
+	controlledShape string
+	vsync           bool
+)
+
+func parseFlags() {
+	flag.StringVar(&controlledShape, "shape", "line",
+		"The shape controlled during execution of the demo.")
+	flag.BoolVar(&vsync, "vsync", true, "Enable vertical synchronization.")
+
+	flag.Parse()
+}
+
 func cirnoToPixel(vector cirno.Vector) pixel.Vec {
 	return pixel.V(vector.X, vector.Y)
 }
@@ -28,7 +42,7 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Cirno demo",
 		Bounds: pixel.R(0, 0, width, height),
-		VSync:  true,
+		VSync:  vsync,
 		//Undecorated: true,
 		//Monitor: pixelgl.PrimaryMonitor(),
 	}
@@ -44,12 +58,25 @@ func run() {
 	circleTemp.SetData(colors.Coral)
 	line := cirno.NewLine(cirno.NewVector(800, 200), cirno.NewVector(1200, 400))
 	line.SetData(colors.Green)
+	lineCtrl := cirno.NewLine(cirno.NewVector(750, 500), cirno.NewVector(900, 600))
+	lineCtrl.SetData(colors.Chocolate)
 
 	space, err := cirno.NewSpace(1, 10, width*2, height*2,
 		cirno.Zero, cirno.NewVector(width, height), false)
 	handleError(err)
-	err = space.Add(circleBig, circleLittle, line, circleTemp)
+	err = space.Add(circleBig, circleLittle, line, circleTemp, lineCtrl)
 	handleError(err)
+
+	// Choose the shape to control.
+	var ctrlShape cirno.Shape
+
+	switch controlledShape {
+	case "circle":
+		ctrlShape = circleLittle
+
+	case "line":
+		ctrlShape = lineCtrl
+	}
 
 	// Setup metrics.
 	last := time.Now()
@@ -84,42 +111,45 @@ func run() {
 			movement = movement.Add(cirno.Right)
 		}
 
+		var foundShape cirno.Shape
+		var normal cirno.Vector
+
 		if movement != cirno.Zero {
 			movement = movement.MultiplyByScalar(moveSpeed * deltaTime)
 
-			shapes, err := space.WouldBeCollidedBy(circleLittle, movement, 0.0)
+			shapes, err := space.WouldBeCollidedBy(ctrlShape, movement, 0.0)
 			handleError(err)
 
 			// If a collision occurres, the shape
 			// will slide.
-			pos := circleLittle.Center()
-			var foundShape cirno.Shape
+			pos := ctrlShape.Center()
 
 			if len(shapes) > 0 {
-				pos, _, foundShape, err = cirno.Approximate(circleLittle, movement, 0.0,
+				normal = cirno.Zero
+				pos, _, foundShape, err = cirno.Approximate(ctrlShape, movement, 0.0,
 					shapes, intensity, false)
 				handleError(err)
 
 				// If there's no opportunity to approximate,
 				// do sliding.
-				if circleLittle.Center().Subtract(pos).Magnitude() < cirno.Epsilon {
-					normal := foundShape.NormalTo(circleLittle)
+				if ctrlShape.Center().Subtract(pos).Magnitude() < cirno.Epsilon {
+					normal = foundShape.NormalTo(ctrlShape)
 					movement = movement.Subtract(normal.
 						MultiplyByScalar(cirno.Dot(movement, normal)))
 
 					// Make sure the shape won't collide other shapes
 					// while sliding.
 					shapes.Remove(foundShape)
-					pos, _, _, err = cirno.Approximate(circleLittle, movement, 0.0,
+					pos, _, _, err = cirno.Approximate(ctrlShape, movement, 0.0,
 						shapes, intensity, false)
 				}
 
-				movement = pos.Subtract(circleLittle.Center())
+				movement = pos.Subtract(ctrlShape.Center())
 			}
 
-			circleLittle.Move(movement)
-			space.AdjustShapePosition(circleLittle)
-			_, err = space.Update(circleLittle)
+			ctrlShape.Move(movement)
+			space.AdjustShapePosition(ctrlShape)
+			_, err = space.Update(ctrlShape)
 			handleError(err)
 		}
 
@@ -161,12 +191,24 @@ func run() {
 		}
 
 		if movement != cirno.Zero {
-			imd.Color = colors.Brown
-			imd.Push(cirnoToPixel(circleLittle.Center()))
-			imd.Push(cirnoToPixel(circleLittle.Center().
+			imd.Color = colors.Magenta
+			imd.Push(cirnoToPixel(ctrlShape.Center()))
+			imd.Push(cirnoToPixel(ctrlShape.Center().
 				Add(movement.MultiplyByScalar(8))))
 			imd.Line(2)
 		}
+
+		if normal != cirno.Zero {
+			imd.Color = colors.Purple
+			imd.Push(cirnoToPixel(foundShape.Center()))
+			imd.Push(cirnoToPixel(foundShape.Center().
+				Add(normal.MultiplyByScalar(16))))
+			imd.Line(2)
+		}
+
+		imd.Color = colors.Red
+		imd.Push(pixel.V(446.91, 284.63))
+		imd.Circle(3, 0)
 
 		imd.Draw(win)
 
@@ -185,6 +227,7 @@ func run() {
 }
 
 func main() {
+	parseFlags()
 	pixelgl.Run(run)
 }
 
