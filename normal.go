@@ -54,9 +54,9 @@ func (circle *Circle) NormalToLine(line *Line) Vector {
 		cq := line.Q().Subtract(circle.Center())
 
 		if cp.SquaredMagnitude() < cq.SquaredMagnitude() {
-			closestPoint = cp
+			closestPoint = line.P()
 		} else {
-			closestPoint = cq
+			closestPoint = line.Q()
 		}
 	}
 
