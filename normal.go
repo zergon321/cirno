@@ -79,19 +79,21 @@ func (line *Line) NormalToCircle(circle *Circle) Vector {
 	return circle.NormalToLine(line).MultiplyByScalar(-1)
 }
 
-// TODO: fix line to line normal.
-
 // NormalToLine returns the normal from the given line
 // to the other line.
 func (line *Line) NormalToLine(other *Line) Vector {
-	pp := other.ProjectPoint(line.p)
-	qp := other.ProjectPoint(line.q)
-	pv := pp.Subtract(line.p)
-	qv := qp.Subtract(line.q)
+	normal := Zero
 
-	if pv.SquaredMagnitude() < qv.SquaredMagnitude() {
-		return pv.Normalize()
+	if line.isPointRightOfLine(other.p) ==
+		line.isPointRightOfLine(other.q) {
+		pointProj := line.ProjectPoint(other.p)
+
+		normal = other.p.Subtract(pointProj).Normalize()
 	} else {
-		return qv.Normalize()
+		pointProj := other.ProjectPoint(line.p)
+
+		normal = pointProj.Subtract(line.p).Normalize()
 	}
+
+	return normal
 }
