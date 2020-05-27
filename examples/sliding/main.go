@@ -60,11 +60,13 @@ func run() {
 	line.SetData(colors.Green)
 	lineCtrl := cirno.NewLine(cirno.NewVector(750, 500), cirno.NewVector(900, 600))
 	lineCtrl.SetData(colors.Chocolate)
+	rect := cirno.NewRectangle(cirno.NewVector(200, 550), 80, 30, 30)
+	rect.SetData(colors.Crimson)
 
 	space, err := cirno.NewSpace(1, 10, width*2, height*2,
 		cirno.Zero, cirno.NewVector(width, height), false)
 	handleError(err)
-	err = space.Add(circleBig, circleLittle, line, circleTemp, lineCtrl)
+	err = space.Add(circleBig, circleLittle, line, circleTemp, lineCtrl, rect)
 	handleError(err)
 
 	// Choose the shape to control.
@@ -76,6 +78,9 @@ func run() {
 
 	case "line":
 		ctrlShape = lineCtrl
+
+	case "rectangle":
+		ctrlShape = rect
 	}
 
 	// Setup metrics.
