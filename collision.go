@@ -85,13 +85,13 @@ func CollisionRectangleToRectangle(a, b *Rectangle) bool {
 
 // CollisionRectangleToCircle detects if there's an intersection between
 // an oriented rectangle and a circle.
-func CollisionRectangleToCircle(rect *Rectangle, cirle *Circle) bool {
+func CollisionRectangleToCircle(rect *Rectangle, circle *Circle) bool {
 	// Transform the circle center coordinates from the world space
 	// to the rectangle's local space.
-	t := cirle.center.Subtract(rect.center)
+	t := circle.center.Subtract(rect.center)
 	theta := -rect.angle
 	t = t.Rotate(theta)
-	localCircle := NewCircle(t, cirle.radius)
+	localCircle := NewCircle(t, circle.radius)
 	localRect := NewRectangle(NewVector(0, 0), rect.Width(), rect.Height(), 0.0)
 	closestPoint := localCircle.center
 
