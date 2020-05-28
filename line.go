@@ -206,11 +206,26 @@ func LinesDistance(a, b *Line) float64 {
 	aqProj := b.ProjectPoint(a.q)
 	bpProj := a.ProjectPoint(b.p)
 	bqProj := a.ProjectPoint(b.q)
-	distances := []float64{
-		apProj.Subtract(a.p).SquaredMagnitude(),
-		aqProj.Subtract(a.q).SquaredMagnitude(),
-		bpProj.Subtract(b.p).SquaredMagnitude(),
-		bqProj.Subtract(b.q).SquaredMagnitude(),
+	distances := make([]float64, 0)
+
+	if !b.ContainsPoint(apProj) {
+		distances = append(distances,
+			math.Min(Distance(a.p, b.p), Distance(a.p, b.q)))
+	}
+
+	if !b.ContainsPoint(aqProj) {
+		distances = append(distances,
+			math.Min(Distance(a.q, b.p), Distance(a.q, b.q)))
+	}
+
+	if !a.ContainsPoint(bpProj) {
+		distances = append(distances,
+			math.Min(Distance(b.p, a.p), Distance(b.p, a.q)))
+	}
+
+	if !a.ContainsPoint(bqProj) {
+		distances = append(distances,
+			math.Min(Distance(b.q, a.p), Distance(b.q, a.q)))
 	}
 
 	sort.Slice(distances, func(i, j int) bool {
