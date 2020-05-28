@@ -2,7 +2,6 @@ package cirno
 
 import (
 	"math"
-	"sort"
 )
 
 // NormalTo returns the normal from the given circle
@@ -31,6 +30,9 @@ func (rect *Rectangle) NormalTo(shape Shape) Vector {
 
 	case *Line:
 		return rect.NormalToLine(other)
+
+	case *Rectangle:
+		return rect.NormalToRectangle(other)
 	}
 
 	return Zero
@@ -158,23 +160,14 @@ func (rect *Rectangle) NormalToCircle(circle *Circle) Vector {
 	return circle.NormalToRectangle(rect).MultiplyByScalar(-1)
 }
 
-// NormalToLine returns
+// NormalToLine returns the normal between the given rectangle
+// and the line.
 func (rect *Rectangle) NormalToLine(line *Line) Vector {
-	// Rectangle vertices.
-	vertices := rect.Vertices()
+	return Zero
+}
 
-	// Rectangle sides.
-	ab := NewLine(vertices[0], vertices[1])
-	bc := NewLine(vertices[1], vertices[2])
-	cd := NewLine(vertices[2], vertices[3])
-	ad := NewLine(vertices[0], vertices[3])
-	sides := []*Line{ab, bc, cd, ad}
-
-	// Find the side that is closest to the line.
-	sort.Slice(sides, func(i, j int) bool {
-		return LinesDistance(sides[i], line) < LinesDistance(sides[j], line)
-	})
-	closestSide := sides[0]
-
-	return closestSide.NormalToLine(line)
+// NormalToRectangle returns the normal from the given rectangle to
+// the other rectangle.
+func (rect *Rectangle) NormalToRectangle(other *Rectangle) Vector {
+	return Zero
 }

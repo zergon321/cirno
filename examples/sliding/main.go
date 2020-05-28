@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"image/color"
+	"sort"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -62,12 +63,15 @@ func run() {
 	lineCtrl.SetData(colors.Chocolate)
 	rect := cirno.NewRectangle(cirno.NewVector(200, 550), 160, 80, 30)
 	rect.SetData(colors.Crimson)
-	//rectStatic := cirno.NewRectangle()
+	rectStatic := cirno.NewRectangle(cirno.NewVector(540, 460), 120, 60, 0.0)
+	rectStatic.SetData(colors.Darkseagreen)
+	line.SetAngle(30)
 
 	space, err := cirno.NewSpace(1, 10, width*2, height*2,
 		cirno.Zero, cirno.NewVector(width, height), false)
 	handleError(err)
-	err = space.Add(circleBig, circleLittle, line, circleTemp, lineCtrl, rect)
+	err = space.Add(circleBig, circleLittle, line, circleTemp,
+		lineCtrl, rect, rectStatic)
 	handleError(err)
 
 	// Choose the shape to control.
@@ -117,8 +121,10 @@ func run() {
 			movement = movement.Add(cirno.Right)
 		}
 
-		var foundShape cirno.Shape
-		var normal cirno.Vector
+		var (
+			foundShape cirno.Shape
+			normal     cirno.Vector
+		)
 
 		if movement != cirno.Zero {
 			movement = movement.MultiplyByScalar(moveSpeed * deltaTime)
@@ -145,7 +151,6 @@ func run() {
 
 					// Make sure the shape won't collide other shapes
 					// while sliding.
-					shapes.Remove(foundShape)
 					pos, _, _, err = cirno.Approximate(ctrlShape, movement, 0.0,
 						shapes, intensity, false)
 				}
@@ -211,6 +216,30 @@ func run() {
 				Add(normal.MultiplyByScalar(16))))
 			imd.Line(2)
 		}
+
+		// Temporary lines for debug purposes.
+
+		// Rectangle vertices.
+		vertices := rect.Vertices()
+
+		// Rectangle sides.
+		ab := cirno.NewLine(vertices[0], vertices[1])
+		bc := cirno.NewLine(vertices[1], vertices[2])
+		cd := cirno.NewLine(vertices[2], vertices[3])
+		ad := cirno.NewLine(vertices[0], vertices[3])
+		sides := []*cirno.Line{ab, bc, cd, ad}
+
+		// Find the side that is closest to the line.
+		sort.Slice(sides, func(i, j int) bool {
+			return cirno.LinesDistance(sides[i], line) < cirno.LinesDistance(sides[j], line)
+		})
+
+		closestSide := sides[0]
+
+		imd.Color = colors.Black
+		imd.Push(cirnoToPixel(closestSide.P()))
+		imd.Push(cirnoToPixel(closestSide.Q()))
+		imd.Line(2)
 
 		imd.Draw(win)
 
