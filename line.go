@@ -2,6 +2,7 @@ package cirno
 
 import (
 	"math"
+	"sort"
 )
 
 // Line represents a geometric euclidian line segment
@@ -176,7 +177,7 @@ func (l *Line) ParallelTo(other *Line) bool {
 	return l.CollinearTo(other) && !l.SameLineWith(other)
 }
 
-// ProjectPoint returns the projrction of the point
+// ProjectPoint returns the projection of the point
 // onto the line.
 func (l *Line) ProjectPoint(point Vector) Vector {
 	t := ((point.X-l.p.X)*(l.q.X-l.p.X) + (point.Y-l.p.Y)*(l.q.Y-l.p.Y)) /
@@ -196,6 +197,27 @@ func (l *Line) touchesOrCrosses(other *Line) bool {
 	return l.ContainsPoint(other.p) ||
 		l.ContainsPoint(other.q) ||
 		(l.isPointRightOfLine(other.p) != l.isPointRightOfLine(other.q))
+}
+
+// LinesDistance returns the shortest distance
+// between two lines.
+func LinesDistance(a, b *Line) float64 {
+	apProj := b.ProjectPoint(a.p)
+	aqProj := b.ProjectPoint(a.q)
+	bpProj := a.ProjectPoint(b.p)
+	bqProj := a.ProjectPoint(b.q)
+	distances := []float64{
+		apProj.Subtract(a.p).SquaredMagnitude(),
+		aqProj.Subtract(a.q).SquaredMagnitude(),
+		bpProj.Subtract(b.p).SquaredMagnitude(),
+		bqProj.Subtract(b.q).SquaredMagnitude(),
+	}
+
+	sort.Slice(distances, func(i, j int) bool {
+		return distances[i] < distances[j]
+	})
+
+	return distances[0]
 }
 
 // NewLine returns a new line segment with the given parameters.
