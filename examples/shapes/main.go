@@ -130,10 +130,10 @@ func run() {
 			Moved(pixel.V(1024, 512)),
 	}
 	rect := &object{
-		shape:  cirno.NewRectangle(cirno.NewVector(640, 520), 150, 50, 30.0),
+		shape:  cirno.NewRectangle(cirno.NewVector(640, 520), 150, 50, 60.0),
 		sprite: pixel.NewSprite(rectPic, pixel.R(0, 0, 32, 44)),
 		transform: pixel.IM.ScaledXY(pixel.ZV, pixel.V(150.0/32.0, 50.0/44.0)).
-			Rotated(pixel.ZV, 30*cirno.DegToRad).
+			Rotated(pixel.ZV, 60*cirno.DegToRad).
 			Moved(pixel.V(640, 520)),
 	}
 	line := &object{
@@ -143,7 +143,7 @@ func run() {
 		shape: cirno.NewLine(cirno.NewVector(720, 450), cirno.NewVector(720, 280)),
 	}
 
-	line.shape.(*cirno.Line).Rotate(-90)
+	line.shape.(*cirno.Line).Rotate(60)
 	otherLine.shape.(*cirno.Line).Rotate(90)
 	//line.shape.(*cirno.Line).Rotate(60)
 	//otherLine.shape.(*cirno.Line).Rotate(-30)
