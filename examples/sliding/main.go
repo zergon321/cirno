@@ -60,7 +60,7 @@ func run() {
 	line.SetData(colors.Green)
 	lineCtrl := cirno.NewLine(cirno.NewVector(750, 500), cirno.NewVector(900, 600))
 	lineCtrl.SetData(colors.Chocolate)
-	rect := cirno.NewRectangle(cirno.NewVector(200, 550), 80, 30, 30)
+	rect := cirno.NewRectangle(cirno.NewVector(200, 550), 160, 80, 30)
 	rect.SetData(colors.Crimson)
 
 	space, err := cirno.NewSpace(1, 10, width*2, height*2,
