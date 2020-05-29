@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"image/color"
-	"sort"
 	"time"
 
 	"github.com/faiface/pixel"
@@ -61,9 +60,9 @@ func run() {
 	line.SetData(colors.Green)
 	lineCtrl := cirno.NewLine(cirno.NewVector(750, 500), cirno.NewVector(900, 600))
 	lineCtrl.SetData(colors.Chocolate)
-	rect := cirno.NewRectangle(cirno.NewVector(200, 550), 160, 80, 30)
+	rect := cirno.NewRectangle(cirno.NewVector(200, 550), 120, 60, 60)
 	rect.SetData(colors.Crimson)
-	rectStatic := cirno.NewRectangle(cirno.NewVector(540, 460), 120, 60, 0.0)
+	rectStatic := cirno.NewRectangle(cirno.NewVector(540, 460), 120, 60, 30.0)
 	rectStatic.SetData(colors.Darkseagreen)
 	line.SetAngle(30)
 
@@ -216,30 +215,6 @@ func run() {
 				Add(normal.MultiplyByScalar(16))))
 			imd.Line(2)
 		}
-
-		// Temporary lines for debug purposes.
-
-		// Rectangle vertices.
-		vertices := rect.Vertices()
-
-		// Rectangle sides.
-		ab := cirno.NewLine(vertices[0], vertices[1])
-		bc := cirno.NewLine(vertices[1], vertices[2])
-		cd := cirno.NewLine(vertices[2], vertices[3])
-		ad := cirno.NewLine(vertices[0], vertices[3])
-		sides := []*cirno.Line{ab, bc, cd, ad}
-
-		// Find the side that is closest to the line.
-		sort.Slice(sides, func(i, j int) bool {
-			return cirno.LinesDistance(sides[i], line) < cirno.LinesDistance(sides[j], line)
-		})
-
-		closestSide := sides[0]
-
-		imd.Color = colors.Black
-		imd.Push(cirnoToPixel(closestSide.P()))
-		imd.Push(cirnoToPixel(closestSide.Q()))
-		imd.Line(2)
 
 		imd.Draw(win)
 

@@ -169,5 +169,40 @@ func (rect *Rectangle) NormalToLine(line *Line) Vector {
 // NormalToRectangle returns the normal from the given rectangle to
 // the other rectangle.
 func (rect *Rectangle) NormalToRectangle(other *Rectangle) Vector {
-	return Zero
+	// A vector from the center of rectangle A to the center of rectangle B.
+	t := other.center.Subtract(rect.center)
+
+	// Check if Ax is parallel to the separating axis and hence the separating axis exists.
+	sepAx := math.Abs(Dot(t, rect.xAxis)) > rect.extents.X+
+		math.Abs(Dot(other.xAxis.MultiplyByScalar(other.extents.X), rect.xAxis))+
+		math.Abs(Dot(other.yAxis.MultiplyByScalar(other.extents.Y), rect.xAxis))
+
+	// Check if Ay is parallel to the separating axis and hence the separating axis exists.
+	sepAy := math.Abs(Dot(t, rect.yAxis)) > rect.extents.Y+
+		math.Abs(Dot(other.xAxis.MultiplyByScalar(other.extents.X), rect.yAxis))+
+		math.Abs(Dot(other.yAxis.MultiplyByScalar(other.extents.Y), rect.yAxis))
+
+	// Check if Bx is parallel to the separating axis and hence the separating axis exists.
+	sepBx := math.Abs(Dot(t, other.xAxis)) > other.extents.X+
+		math.Abs(Dot(rect.xAxis.MultiplyByScalar(rect.extents.X), other.xAxis))+
+		math.Abs(Dot(rect.yAxis.MultiplyByScalar(rect.extents.Y), other.xAxis))
+
+	// Check if By is parallel to the separating axis and hence the separating axis exists.
+	sepBy := math.Abs(Dot(t, other.yAxis)) > other.extents.Y+
+		math.Abs(Dot(rect.xAxis.MultiplyByScalar(rect.extents.X), other.yAxis))+
+		math.Abs(Dot(rect.yAxis.MultiplyByScalar(rect.extents.Y), other.yAxis))
+
+	var normal Vector
+
+	if sepAx {
+		normal = rect.xAxis
+	} else if sepAy {
+		normal = rect.yAxis
+	} else if sepBx {
+		normal = other.xAxis
+	} else if sepBy {
+		normal = other.yAxis
+	}
+
+	return normal
 }
