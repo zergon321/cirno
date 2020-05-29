@@ -163,7 +163,35 @@ func (rect *Rectangle) NormalToCircle(circle *Circle) Vector {
 // NormalToLine returns the normal between the given rectangle
 // and the line.
 func (rect *Rectangle) NormalToLine(line *Line) Vector {
-	return Zero
+	lineAxisX := line.q.Subtract(line.Center()).Normalize()
+	lineAxisY := lineAxisX.Rotate(90)
+	lineExtent := line.Length() / 2
+	t := line.Center().Subtract(rect.center)
+
+	sepAx := math.Abs(Dot(t, rect.xAxis)) > rect.extents.X+
+		math.Abs(Dot(lineAxisX.MultiplyByScalar(lineExtent), rect.xAxis))
+	sepAy := math.Abs(Dot(t, rect.yAxis)) > rect.extents.Y+
+		math.Abs(Dot(lineAxisX.MultiplyByScalar(lineExtent), rect.yAxis))
+	sepLineX := math.Abs(Dot(t, lineAxisX)) > lineExtent+
+		math.Abs(Dot(rect.xAxis.MultiplyByScalar(rect.extents.X), lineAxisX))+
+		math.Abs(Dot(rect.yAxis.MultiplyByScalar(rect.extents.Y), lineAxisX))
+	sepLineY := math.Abs(Dot(t, lineAxisY)) >
+		math.Abs(Dot(rect.xAxis.MultiplyByScalar(rect.extents.X), lineAxisY))+
+			math.Abs(Dot(rect.yAxis.MultiplyByScalar(rect.extents.Y), lineAxisY))
+
+	var normal Vector
+
+	if sepAx {
+		normal = rect.xAxis
+	} else if sepAy {
+		normal = rect.yAxis
+	} else if sepLineX {
+		normal = lineAxisX
+	} else if sepLineY {
+		normal = lineAxisY
+	}
+
+	return normal
 }
 
 // NormalToRectangle returns the normal from the given rectangle to
