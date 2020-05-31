@@ -154,30 +154,28 @@ func IntersectionLineToCircle(line *Line, circle *Circle) bool {
 // IntersectionLineToRectangle detects if there's an intersection between
 // a line and a rectangle.
 func IntersectionLineToRectangle(line *Line, rect *Rectangle) bool {
-	// Transform both shapes into local coordinates.
-	pv := line.p.Subtract(rect.center)
-	qv := line.q.Subtract(rect.center)
-	theta := -rect.angle
-	pv = pv.Rotate(theta)
-	qv = qv.Rotate(theta)
-	localLine := NewLine(pv, qv)
-	localRect := NewRectangle(NewVector(0, 0), rect.Width(), rect.Height(), 0.0)
+	// The method for two rectangles is as well appropriate
+	// for line and rectangle because line segment is just
+	// a rectangle with no Y extent.
+	lineAxisX := line.q.Subtract(line.Center()).Normalize()
+	lineAxisY := lineAxisX.Rotate(90)
+	lineExtent := line.Length() / 2
+	t := line.Center().Subtract(rect.center)
 
-	// Check if one of line ends is inside the rectangle.
-	if localRect.ContainsPoint(localLine.p) || localRect.ContainsPoint(localLine.q) {
-		return true
+	sepAx := math.Abs(Dot(t, rect.xAxis)) > rect.extents.X+
+		math.Abs(Dot(lineAxisX.MultiplyByScalar(lineExtent), rect.xAxis))
+	sepAy := math.Abs(Dot(t, rect.yAxis)) > rect.extents.Y+
+		math.Abs(Dot(lineAxisX.MultiplyByScalar(lineExtent), rect.yAxis))
+	sepLineX := math.Abs(Dot(t, lineAxisX)) > lineExtent+
+		math.Abs(Dot(rect.xAxis.MultiplyByScalar(rect.extents.X), lineAxisX))+
+		math.Abs(Dot(rect.yAxis.MultiplyByScalar(rect.extents.Y), lineAxisX))
+	sepLineY := math.Abs(Dot(t, lineAxisY)) >
+		math.Abs(Dot(rect.xAxis.MultiplyByScalar(rect.extents.X), lineAxisY))+
+			math.Abs(Dot(rect.yAxis.MultiplyByScalar(rect.extents.Y), lineAxisY))
+
+	if sepAx || sepAy || sepLineX || sepLineY {
+		return false
 	}
 
-	// Rectangle vertices.
-	vertices := localRect.Vertices()
-
-	// Rectangle side.
-	ab := NewLine(vertices[0], vertices[1])
-	bc := NewLine(vertices[1], vertices[2])
-	cd := NewLine(vertices[2], vertices[3])
-	ad := NewLine(vertices[0], vertices[3])
-
-	// Check line intersection against each side.
-	return IntersectionLineToLine(localLine, ab) || IntersectionLineToLine(localLine, bc) ||
-		IntersectionLineToLine(localLine, cd) || IntersectionLineToLine(localLine, ad)
+	return true
 }
