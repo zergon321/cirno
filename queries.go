@@ -8,7 +8,7 @@ import (
 // to the origin of the ray.
 //
 // Ray cannot hit against the shape within which it's located.
-func (space *Space) Raycast(origin Vector, direction Vector, distance float64, mask int32) Shape {
+func (space *Space) Raycast(origin Vector, direction Vector, distance float64, mask int32) (Shape, Vector) {
 	if distance <= 0 {
 		distance = Distance(space.min, space.max)
 	}
@@ -22,6 +22,7 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 	var (
 		minSquaredDistance float64
 		hitShape           Shape
+		hit                Vector
 	)
 
 	for nodeQueue.Len() > 0 {
@@ -35,16 +36,21 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 		if node.northWest == nil {
 			for shape := range node.shapes {
 				if ResolveCollision(ray, shape, space.useTags) && !shape.ContainsPoint(ray.p) {
-					hitDistance := SquaredDistance(ray.p, shape.Center())
+					contacts := Contact(ray, shape)
+					for _, contact := range contacts {
+						sqrDistance := SquaredDistance(ray.p, contact)
 
-					if !minExists {
-						minSquaredDistance = hitDistance
-						hitShape = shape
+						if !minExists {
+							hit = contact
+							hitShape = shape
+							minSquaredDistance = sqrDistance
 
-						minExists = true
-					} else if hitDistance < minSquaredDistance {
-						minSquaredDistance = hitDistance
-						hitShape = shape
+							minExists = true
+						} else if sqrDistance < minSquaredDistance {
+							hit = contact
+							hitShape = shape
+							minSquaredDistance = sqrDistance
+						}
 					}
 				}
 			}
@@ -56,7 +62,7 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 		}
 	}
 
-	return hitShape
+	return hitShape, hit
 }
 
 // Boxcast casts a box in the space and returns all the

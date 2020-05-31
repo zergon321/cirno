@@ -27,14 +27,14 @@ func TestRaycast(t *testing.T) {
 	assert.Nil(t, err)
 
 	// Do raycast.
-	shape := space.Raycast(rhombus.Center(), cirno.NewVector(1, 1), 0, 0)
+	shape, _ := space.Raycast(rhombus.Center(), cirno.NewVector(1, 1), 0, 0)
 	assert.Equal(t, shape, line)
-	shape = space.Raycast(rhombus.Center(), cirno.NewVector(-1, 1), 0, 0)
+	shape, _ = space.Raycast(rhombus.Center(), cirno.NewVector(-1, 1), 0, 0)
 	assert.Equal(t, shape, circle)
-	shape = space.Raycast(rhombus.Center(), cirno.NewVector(-1, -1), 0, 0)
+	shape, _ = space.Raycast(rhombus.Center(), cirno.NewVector(-1, -1), 0, 0)
 	assert.Equal(t, shape, rect)
-	shape = space.Raycast(rhombus.Center(), cirno.NewVector(1, -1), 0, 0)
+	shape, _ = space.Raycast(rhombus.Center(), cirno.NewVector(1, -1), 0, 0)
 	assert.Equal(t, shape, cube)
-	shape = space.Raycast(rhombus.Center(), cirno.NewVector(0, -1), 0, 0)
+	shape, _ = space.Raycast(rhombus.Center(), cirno.NewVector(0, -1), 0, 0)
 	assert.Nil(t, shape)
 }
