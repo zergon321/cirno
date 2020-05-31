@@ -17,6 +17,7 @@ const (
 	width     = 1280
 	height    = 720
 	moveSpeed = 400
+	turnSpeed = 400
 	intensity = 500
 )
 
@@ -120,24 +121,37 @@ func run() {
 			movement = movement.Add(cirno.Right)
 		}
 
+		// Turn.
+		turn := 0.0
+
+		if win.Pressed(pixelgl.KeyW) {
+			turn++
+		}
+
+		if win.Pressed(pixelgl.KeyX) {
+			turn--
+		}
+
 		var (
 			foundShape cirno.Shape
 			normal     cirno.Vector
 		)
 
-		if movement != cirno.Zero {
+		if movement != cirno.Zero || turn != 0 {
 			movement = movement.MultiplyByScalar(moveSpeed * deltaTime)
+			turn *= turnSpeed * deltaTime
 
-			shapes, err := space.WouldBeCollidedBy(ctrlShape, movement, 0.0)
+			shapes, err := space.WouldBeCollidedBy(ctrlShape, movement, turn)
 			handleError(err)
 
 			// If a collision occurres, the shape
 			// will slide.
 			pos := ctrlShape.Center()
+			angle := ctrlShape.Angle()
 
 			if len(shapes) > 0 {
 				normal = cirno.Zero
-				pos, _, foundShape, err = cirno.Approximate(ctrlShape, movement, 0.0,
+				pos, angle, foundShape, err = cirno.Approximate(ctrlShape, movement, turn,
 					shapes, intensity, false)
 				handleError(err)
 
@@ -150,14 +164,16 @@ func run() {
 
 					// Make sure the shape won't collide other shapes
 					// while sliding.
-					pos, _, _, err = cirno.Approximate(ctrlShape, movement, 0.0,
+					pos, angle, _, err = cirno.Approximate(ctrlShape, movement, 0.0,
 						shapes, intensity, false)
 				}
 
 				movement = pos.Subtract(ctrlShape.Center())
+				turn = angle - ctrlShape.Angle()
 			}
 
 			ctrlShape.Move(movement)
+			ctrlShape.Rotate(turn)
 			space.AdjustShapePosition(ctrlShape)
 			_, err = space.Update(ctrlShape)
 			handleError(err)
