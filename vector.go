@@ -52,7 +52,7 @@ func (v Vector) SquaredMagnitude() float64 {
 	return v.X*v.X + v.Y*v.Y
 }
 
-// Rotate returns the vector totated at an angle of n degrees.
+// Rotate returns the vector rotated at an angle of n degrees.
 func (v Vector) Rotate(angle float64) Vector {
 	return v.RotateRadians(angle * DegToRad)
 }
@@ -63,6 +63,27 @@ func (v Vector) RotateRadians(angle float64) Vector {
 	sinA := math.Sin(angle)
 
 	return NewVector(v.X*cosA-v.Y*sinA, v.X*sinA+v.Y*cosA)
+}
+
+// RotateAround returns the vector rotated at an angle of n degrees
+// around the base vector.
+func (v Vector) RotateAround(angle float64, base Vector) Vector {
+	return v.RotateAroundRadians(angle*DegToRad, base)
+}
+
+// RotateAroundRadians returns the vector totated at an angle of n radians
+// around the base vector.
+func (v Vector) RotateAroundRadians(angle float64, base Vector) Vector {
+	x := v.X - base.X
+	y := v.Y - base.Y
+
+	cosA := math.Cos(angle)
+	sinA := math.Sin(angle)
+
+	xRot := x*cosA - y*sinA
+	yRot := y*cosA + x*sinA
+
+	return NewVector(base.X+xRot, base.Y+yRot)
 }
 
 // Project returns vector v projected onto the axis.
