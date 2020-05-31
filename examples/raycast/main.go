@@ -88,7 +88,7 @@ func run() {
 		}
 
 		// If the shape is hit by the ray, its color is set to red.
-		hitShape := space.Raycast(origin, direction, 0, 0)
+		hitShape, hitPoint := space.Raycast(origin, direction, 0, 0)
 
 		if hitShape != nil {
 			hitShape.SetData(colornames.Red)
@@ -140,6 +140,11 @@ func run() {
 			pixel.V(ray.Q().X, ray.Q().Y),
 		)
 		imd.Line(2)
+
+		// Draw the hit point.
+		imd.Color = colornames.Blue
+		imd.Push(pixel.V(hitPoint.X, hitPoint.Y))
+		imd.Circle(6, 0)
 
 		// Restore hit shape color.
 		if hitShape != nil {
