@@ -17,6 +17,18 @@ const (
 
 type none struct{}
 
+// Sign returns the sign of the number
+// according to Epsilon.
+func Sign(number float64) float64 {
+	if number < 0 {
+		return -1
+	} else if number < Epsilon {
+		return 0
+	} else {
+		return 1
+	}
+}
+
 // Distance returns the value of distance
 // between two points represented as vectors.
 func Distance(a, b Vector) float64 {
