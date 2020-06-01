@@ -27,7 +27,7 @@ var (
 )
 
 func parseFlags() {
-	flag.StringVar(&controlledShape, "shape", "rectangle",
+	flag.StringVar(&controlledShape, "shape", "line",
 		"The shape controlled during execution of the demo.")
 	flag.BoolVar(&vsync, "vsync", true, "Enable vertical synchronization.")
 
@@ -139,7 +139,7 @@ func run() {
 
 		if movement != cirno.Zero || turn != 0 {
 			movement = movement.MultiplyByScalar(moveSpeed * deltaTime)
-			turn *= turnSpeed * deltaTime
+			turn = turn * turnSpeed * deltaTime
 
 			shapes, err := space.WouldBeCollidedBy(ctrlShape, movement, turn)
 			handleError(err)
@@ -164,7 +164,7 @@ func run() {
 
 					// Make sure the shape won't collide other shapes
 					// while sliding.
-					pos, angle, _, err = cirno.Approximate(ctrlShape, movement, 0.0,
+					pos, _, _, err = cirno.Approximate(ctrlShape, movement, 0.0,
 						shapes, intensity, false)
 				}
 
@@ -228,7 +228,7 @@ func run() {
 			imd.Color = colors.Purple
 			imd.Push(cirnoToPixel(foundShape.Center()))
 			imd.Push(cirnoToPixel(foundShape.Center().
-				Add(normal.MultiplyByScalar(16))))
+				Add(normal.MultiplyByScalar(1600))))
 			imd.Line(2)
 		}
 
