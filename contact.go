@@ -213,7 +213,7 @@ func ContactRectangleToRectangle(one, other *Rectangle) []Vector {
 	contacts := make([]Vector, 0)
 
 	for i := 0; i < len(oneSides); i++ {
-		for j := i; j < len(otherSides); j++ {
+		for j := 0; j < len(otherSides); j++ {
 			sideContacts := ContactLineToLine(oneSides[i], otherSides[j])
 			contacts = append(contacts, sideContacts...)
 		}
