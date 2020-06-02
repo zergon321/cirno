@@ -86,6 +86,12 @@ func (v Vector) RotateAroundRadians(angle float64, base Vector) Vector {
 	return NewVector(base.X+xRot, base.Y+yRot)
 }
 
+// CollinearTo indicates if the given vector is collinear to the
+// other vector.
+func (v Vector) CollinearTo(other Vector) bool {
+	return AdjustAngle(Angle(v, other)) < CollinearityThreshold
+}
+
 // Project returns vector v projected onto the axis.
 func (v Vector) Project(axis Vector) Vector {
 	factor := Dot(v, axis) / Dot(axis, axis)
