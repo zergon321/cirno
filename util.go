@@ -13,6 +13,9 @@ const (
 	DegToRad float64 = math.Pi / 180.0
 	// Epsilon is the constant for approximate comparisons.
 	Epsilon float64 = 0.01
+	// CollinearityThreshold is the constant to detect if two vectors
+	// are effectively collinear.
+	CollinearityThreshold float64 = 5.0
 )
 
 type none struct{}
@@ -80,20 +83,22 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 				line := shape.(*Line)
 				otherLine := other.(*Line)
 
-				// Compare line tags.
-				if useTags && !line.ShouldCollide(otherLine) {
-					continue
-				}
+				if line.CollinearTo(otherLine) {
+					// Compare line tags.
+					if useTags && !line.ShouldCollide(otherLine) {
+						continue
+					}
 
-				// Vice versa.
-				movement := currentPos.Subtract(prevPos)
-				turn := currentAngle - prevAngle
+					// Vice versa.
+					movement := currentPos.Subtract(prevPos)
+					turn := currentAngle - prevAngle
 
-				if linesWouldCollide(prevPos, prevAngle, movement, turn, line, otherLine) {
-					collisionFound = true
-					foundShape = otherLine
+					if linesWouldCollide(prevPos, prevAngle, movement, turn, line, otherLine) {
+						collisionFound = true
+						foundShape = otherLine
 
-					break
+						break
+					}
 				}
 			}
 
