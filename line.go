@@ -158,7 +158,7 @@ func (l *Line) CollinearTo(other *Line) bool {
 	lVec := l.q.Subtract(l.p)
 	otherVec := other.q.Subtract(other.p)
 
-	return math.Abs(Cross(lVec, otherVec)) < Epsilon
+	return lVec.CollinearTo(otherVec)
 }
 
 // SameLineWith returns true if two line segments
