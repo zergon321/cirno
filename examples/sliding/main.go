@@ -228,7 +228,7 @@ func run() {
 			imd.Color = colors.Purple
 			imd.Push(cirnoToPixel(foundShape.Center()))
 			imd.Push(cirnoToPixel(foundShape.Center().
-				Add(normal.MultiplyByScalar(1600))))
+				Add(normal.MultiplyByScalar(16))))
 			imd.Line(2)
 		}
 
