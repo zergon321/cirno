@@ -269,15 +269,17 @@ func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff flo
 				lineShape := shape.(*Line)
 				lineItem := item.(*Line)
 
-				// Check line tags.
-				if space.useTags && !lineShape.ShouldCollide(lineItem) {
-					continue
-				}
+				if lineShape.CollinearTo(lineItem) {
+					// Check line tags.
+					if space.useTags && !lineShape.ShouldCollide(lineItem) {
+						continue
+					}
 
-				if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
-					shapes.Insert(lineItem)
+					if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
+						shapes.Insert(lineItem)
 
-					continue
+						continue
+					}
 				}
 			}
 
@@ -347,15 +349,17 @@ func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff 
 				lineShape := shape.(*Line)
 				lineItem := item.(*Line)
 
-				// Check line tags.
-				if space.useTags && !lineItem.ShouldCollide(lineShape) {
-					continue
-				}
+				if lineShape.CollinearTo(lineItem) {
+					// Check line tags.
+					if space.useTags && !lineItem.ShouldCollide(lineShape) {
+						continue
+					}
 
-				if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
-					shapes.Insert(lineItem)
+					if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
+						shapes.Insert(lineItem)
 
-					continue
+						continue
+					}
 				}
 			}
 
