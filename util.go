@@ -15,7 +15,7 @@ const (
 	Epsilon float64 = 0.01
 	// CollinearityThreshold is the constant to detect if two vectors
 	// are effectively collinear.
-	CollinearityThreshold float64 = 5.0
+	CollinearityThreshold float64 = 10.0
 )
 
 type none struct{}
