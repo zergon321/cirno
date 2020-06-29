@@ -15,6 +15,21 @@ type Space struct {
 	useTags bool
 }
 
+// Cells returns all the cells the space is subdivided to.
+func (space *Space) Cells() []*Rectangle {
+	cells := []*Rectangle{}
+
+	for leaf := range space.tree.leaves {
+		boundary := leaf.boundary
+		cell := NewRectangle(boundary.center,
+			boundary.Width(), boundary.Height(), boundary.angle)
+
+		cells = append(cells, cell)
+	}
+
+	return cells
+}
+
 // Max returns the max point of the space.
 func (space *Space) Max() Vector {
 	return space.max

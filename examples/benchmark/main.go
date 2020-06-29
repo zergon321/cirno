@@ -90,9 +90,9 @@ func run() {
 		collidingShapes, err := space.CollidingShapes()
 		handleError(err)
 
-		// Render all the shapes.
 		imd.Clear()
 
+		// Render all the shapes.
 		for _, shape := range shapeList {
 			imd.Color = shape.Data().(color.RGBA)
 			vertices := shape.Vertices()
@@ -105,6 +105,21 @@ func run() {
 			)
 
 			imd.Polygon(0)
+		}
+
+		// Render all the space cells.
+		for _, cell := range space.Cells() {
+			imd.Color = colors.Green
+			vertices := cell.Vertices()
+
+			imd.Push(
+				pixel.V(vertices[0].X, vertices[0].Y),
+				pixel.V(vertices[1].X, vertices[1].Y),
+				pixel.V(vertices[2].X, vertices[2].Y),
+				pixel.V(vertices[3].X, vertices[3].Y),
+			)
+
+			imd.Polygon(2)
 		}
 
 		imd.Draw(win)

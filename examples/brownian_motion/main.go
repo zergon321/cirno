@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/faiface/pixel"
+	"github.com/faiface/pixel/imdraw"
 	"github.com/faiface/pixel/pixelgl"
 	"github.com/zergon321/cirno"
 	"golang.org/x/image/colornames"
@@ -110,6 +111,9 @@ func run() {
 	cps := 0
 	perSecond := time.Tick(time.Second)
 
+	// Setup wireframe drawer.
+	imd := imdraw.New(nil)
+
 	for !win.Closed() {
 		deltaTime := time.Since(last).Seconds()
 		last = time.Now()
@@ -173,7 +177,24 @@ func run() {
 			sprites[i].Draw(batch, transform)
 		}
 
+		imd.Clear()
+
+		for _, cell := range space.Cells() {
+			imd.Color = colornames.Green
+			vertices := cell.Vertices()
+
+			imd.Push(
+				pixel.V(vertices[0].X, vertices[0].Y),
+				pixel.V(vertices[1].X, vertices[1].Y),
+				pixel.V(vertices[2].X, vertices[2].Y),
+				pixel.V(vertices[3].X, vertices[3].Y),
+			)
+
+			imd.Polygon(2)
+		}
+
 		batch.Draw(win)
+		imd.Draw(win)
 
 		win.Update()
 
