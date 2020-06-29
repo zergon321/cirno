@@ -6,6 +6,7 @@ type Circle struct {
 	radius float64
 	tag
 	data
+	domain
 }
 
 // Center returns the coordinates of the center
@@ -99,8 +100,11 @@ func (c *Circle) ContainsPoint(point Vector) bool {
 
 // NewCircle create a new circle with the given parameters.
 func NewCircle(position Vector, radius float64) *Circle {
-	return &Circle{
-		center: position,
-		radius: radius,
-	}
+	circle := new(Circle)
+
+	circle.center = position
+	circle.radius = radius
+	circle.treeNodes = []*quadTreeNode{}
+
+	return circle
 }

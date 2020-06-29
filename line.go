@@ -13,6 +13,7 @@ type Line struct {
 	angle float64
 	tag
 	data
+	domain
 }
 
 // Center returns the coordinates of the middle point
@@ -250,6 +251,8 @@ func NewLine(p Vector, q Vector) *Line {
 	} else {
 		line.angle = angle
 	}
+
+	line.treeNodes = []*quadTreeNode{}
 
 	return line
 }

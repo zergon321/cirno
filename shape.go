@@ -12,14 +12,23 @@ type Shape interface {
 	SetAngle(float64) float64
 	SetAngleRadians(float64) float64
 	ContainsPoint(Vector) bool
+
 	GetIdentity() int32
 	SetIdentity(int32)
+
 	GetMask() int32
 	SetMask(int32)
+
 	ShouldCollide(Shape) bool
+
 	Data() interface{}
 	SetData(data interface{})
+
 	NormalTo(Shape) Vector
+
+	nodes() []*quadTreeNode
+	addNode(*quadTreeNode)
+	removeNode(*quadTreeNode)
 }
 
 // Shapes represents a list of shapes.

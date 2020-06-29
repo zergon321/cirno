@@ -9,6 +9,7 @@ type Rectangle struct {
 	angle   float64
 	tag
 	data
+	domain
 }
 
 // Center returns the coordinates of the center of the rectangle.
@@ -133,6 +134,7 @@ func NewRectangle(position Vector, width, height, angle float64) *Rectangle {
 	rect.xAxis = NewVector(1, 0)
 	rect.yAxis = NewVector(0, 1)
 	rect.Rotate(angle)
+	rect.treeNodes = []*quadTreeNode{}
 
 	return rect
 }
