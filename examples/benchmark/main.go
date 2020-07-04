@@ -108,7 +108,7 @@ func run() {
 		}
 
 		// Render all the space cells.
-		for _, cell := range space.Cells() {
+		for cell := range space.Cells() {
 			imd.Color = colors.Green
 			vertices := cell.Vertices()
 

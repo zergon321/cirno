@@ -16,15 +16,15 @@ type Space struct {
 }
 
 // Cells returns all the cells the space is subdivided to.
-func (space *Space) Cells() []*Rectangle {
-	cells := []*Rectangle{}
+func (space *Space) Cells() map[*Rectangle]Shapes {
+	cells := map[*Rectangle]Shapes{}
 
 	for leaf := range space.tree.leaves {
 		boundary := leaf.boundary
 		cell := NewRectangle(boundary.center,
 			boundary.Width(), boundary.Height(), boundary.angle)
 
-		cells = append(cells, cell)
+		cells[cell] = leaf.shapes.Copy()
 	}
 
 	return cells

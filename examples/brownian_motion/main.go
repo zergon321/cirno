@@ -179,7 +179,7 @@ func run() {
 
 		imd.Clear()
 
-		for _, cell := range space.Cells() {
+		for cell, cellShapes := range space.Cells() {
 			imd.Color = colornames.Green
 			vertices := cell.Vertices()
 
@@ -191,6 +191,10 @@ func run() {
 			)
 
 			imd.Polygon(2)
+
+			imd.Push(pixel.V(cell.Center().X, cell.Center().Y))
+
+			imd.Circle(float64(len(cellShapes)), 2)
 		}
 
 		batch.Draw(win)

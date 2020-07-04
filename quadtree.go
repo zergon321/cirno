@@ -52,7 +52,7 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 		return nil, fmt.Errorf("The shape is out of bounds")
 	}
 
-	nodes := make([]*quadTreeNode, 0)
+	nodes := []*quadTreeNode{}
 	nodeQueue := queue.New()
 	nodeQueue.Enqueue(tree.root)
 
@@ -65,30 +65,35 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 			continue
 		}
 
-		// If the node limit is not exceeded,
-		// add the shape in the list of shapes
-		// covered by the node area.
-		if node.canAcceptShape() {
-			node.shapes.Insert(shape)
-			nodes = append(nodes, node)
+		// If the node is not a leaf,
+		// skip it.
+		if node.northWest != nil {
+			nodeQueue.Enqueue(node.northEast)
+			nodeQueue.Enqueue(node.northWest)
+			nodeQueue.Enqueue(node.southEast)
+			nodeQueue.Enqueue(node.southWest)
 
 			continue
 		}
 
-		// Split the node into four subareas
-		// and add the subnodes in the queue.
-		if node.northWest == nil {
+		// If the node limit is not exceeded,
+		// add the shape in the list of shapes
+		// covered by the node area.
+		if len(node.shapes) < node.tree.nodeCapacity ||
+			node.level > node.tree.maxLevel {
+			node.shapes.Insert(shape)
+			nodes = append(nodes, node)
+
+			continue
+		} else {
+			// Split the node into four subareas
+			// and add the subnodes in the queue.
 			err := node.split()
 
 			if err != nil {
 				return nil, err
 			}
 		}
-
-		nodeQueue.Enqueue(node.northEast)
-		nodeQueue.Enqueue(node.northWest)
-		nodeQueue.Enqueue(node.southEast)
-		nodeQueue.Enqueue(node.southWest)
 	}
 
 	return nodes, nil
@@ -104,7 +109,7 @@ func (tree *quadTree) search(shape Shape) ([]*quadTreeNode, error) {
 		return nil, fmt.Errorf("The shape is out of bounds")
 	}
 
-	nodes := make([]*quadTreeNode, 0)
+	nodes := []*quadTreeNode{}
 	nodeQueue := queue.New()
 	nodeQueue.Enqueue(tree.root)
 
@@ -165,7 +170,7 @@ func (tree *quadTree) remove(shape Shape) error {
 
 				// If the quantity of shapes in the child nodes
 				// is less than the node capacity.
-				if sum < node.tree.nodeCapacity {
+				if sum <= node.tree.nodeCapacity {
 					err := node.parent.assemble()
 
 					if err != nil {
@@ -190,9 +195,9 @@ func (tree *quadTree) clear() error {
 		tree:     tree,
 		boundary: tree.root.boundary,
 		level:    0,
-		shapes:   make(Shapes, tree.nodeCapacity),
+		shapes:   Shapes{},
 	}
-	tree.leaves = make(map[*quadTreeNode]none)
+	tree.leaves = map[*quadTreeNode]none{}
 
 	if err := tree.addLeaf(tree.root); err != nil {
 		return err
@@ -204,7 +209,7 @@ func (tree *quadTree) clear() error {
 // shapeGroups returns the dictionary of shapes grouped
 // by their nodes in the quad tree.
 func (tree *quadTree) shapeGroups() map[*quadTreeNode]Shapes {
-	shapes := make(map[*quadTreeNode]Shapes)
+	shapes := map[*quadTreeNode]Shapes{}
 
 	for node := range tree.leaves {
 		shapes[node] = node.shapes.Copy()
@@ -225,12 +230,6 @@ type quadTreeNode struct {
 	boundary  *Rectangle
 	shapes    Shapes
 	level     int
-}
-
-// isLeaf returns true if the node is a quad tree leaf.
-func (node *quadTreeNode) canAcceptShape() bool {
-	return len(node.shapes) < node.tree.nodeCapacity &&
-		node.northWest == nil || node.level == node.tree.maxLevel-1
 }
 
 // add adds all the shapes covered by node area
@@ -275,7 +274,7 @@ func (node *quadTreeNode) split() error {
 			node.boundary.extents.X,
 			node.boundary.extents.Y, 0.0),
 		level:  nextLevel,
-		shapes: make(Shapes, node.tree.nodeCapacity),
+		shapes: Shapes{},
 	}
 
 	node.northWest = &quadTreeNode{
@@ -285,7 +284,7 @@ func (node *quadTreeNode) split() error {
 			node.boundary.extents.X,
 			node.boundary.extents.Y, 0.0),
 		level:  nextLevel,
-		shapes: make(Shapes, node.tree.nodeCapacity),
+		shapes: Shapes{},
 	}
 
 	node.southEast = &quadTreeNode{
@@ -295,7 +294,7 @@ func (node *quadTreeNode) split() error {
 			node.boundary.extents.X,
 			node.boundary.extents.Y, 0.0),
 		level:  nextLevel,
-		shapes: make(Shapes, node.tree.nodeCapacity),
+		shapes: Shapes{},
 	}
 
 	node.southWest = &quadTreeNode{
@@ -305,7 +304,7 @@ func (node *quadTreeNode) split() error {
 			node.boundary.extents.X,
 			node.boundary.extents.Y, 0.0),
 		level:  nextLevel,
-		shapes: make(Shapes, node.tree.nodeCapacity),
+		shapes: Shapes{},
 	}
 
 	// Redistribute shapes between subnodes.
@@ -313,6 +312,7 @@ func (node *quadTreeNode) split() error {
 	node.northWest.add(node.shapes)
 	node.southEast.add(node.shapes)
 	node.southWest.add(node.shapes)
+	node.shapes = Shapes{}
 
 	// Remove the current node from tree leaves.
 	err := node.tree.removeLeaf(node)
@@ -410,13 +410,13 @@ func newQuadTree(boundary *Rectangle, maxLevel, nodeCapacity int) (*quadTree, er
 
 	tree.maxLevel = maxLevel
 	tree.nodeCapacity = nodeCapacity
-	tree.leaves = make(map[*quadTreeNode]none)
+	tree.leaves = map[*quadTreeNode]none{}
 	tree.root = &quadTreeNode{
 		tree:     tree,
 		parent:   nil,
 		boundary: boundary,
 		level:    0,
-		shapes:   make(Shapes, nodeCapacity),
+		shapes:   Shapes{},
 	}
 
 	if err := tree.addLeaf(tree.root); err != nil {
