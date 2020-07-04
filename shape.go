@@ -27,8 +27,10 @@ type Shape interface {
 	NormalTo(Shape) Vector
 
 	nodes() []*quadTreeNode
-	addNode(*quadTreeNode)
-	removeNode(*quadTreeNode)
+	addNodes(...*quadTreeNode)
+	containsNode(*quadTreeNode) bool
+	removeNodes(...*quadTreeNode)
+	clearNodes()
 }
 
 // Shapes represents a list of shapes.

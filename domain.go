@@ -16,30 +16,50 @@ func (d *domain) nodes() []*quadTreeNode {
 	return nodes
 }
 
-// addNode adds a new node in the list of nodes
+// addNodes adds new nodes in the list of the nodes
 // the shape belongs to.
-func (d *domain) addNode(node *quadTreeNode) {
-	d.treeNodes = append(d.treeNodes, node)
+func (d *domain) addNodes(nodes ...*quadTreeNode) {
+	d.treeNodes = append(d.treeNodes, nodes...)
 }
 
-// removeNode removes the quad tree node from the list
-// nodes the shape belongs to.
-//
-// This method does nothing if the node is not included
-// in the shape's domain.
-func (d *domain) removeNode(node *quadTreeNode) {
-	index := -1
-
-	for i, treeNode := range d.treeNodes {
+// containsNode returns true if the node is included
+// in the shape's domain, and false otherwise.
+func (d *domain) containsNode(node *quadTreeNode) bool {
+	for _, treeNode := range d.treeNodes {
 		if treeNode == node {
-			index = i
-
-			break
+			return true
 		}
 	}
 
-	if index >= 0 {
-		d.treeNodes = append(d.treeNodes[:index],
-			d.treeNodes[index+1:]...)
+	return false
+}
+
+// removeNodes removes the quad tree nodes from
+// the list of the nodes the shape belongs to.
+//
+// This method does nothing if the node
+// is not included in the shape's domain.
+func (d *domain) removeNodes(nodes ...*quadTreeNode) {
+	for _, node := range nodes {
+		index := -1
+
+		for i, treeNode := range d.treeNodes {
+			if treeNode == node {
+				index = i
+
+				break
+			}
+		}
+
+		if index >= 0 {
+			d.treeNodes = append(d.treeNodes[:index],
+				d.treeNodes[index+1:]...)
+		}
 	}
+}
+
+// clearNodes removes all the nodes
+// from the shape's domain.
+func (d *domain) clearNodes() {
+	d.treeNodes = []*quadTreeNode{}
 }

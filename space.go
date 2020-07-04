@@ -3,6 +3,8 @@ package cirno
 import (
 	"fmt"
 	"reflect"
+
+	"github.com/golang-collections/collections/queue"
 )
 
 // Space represents a geometric space
@@ -132,32 +134,111 @@ func (space *Space) Shapes() Shapes {
 	return space.shapes.Copy()
 }
 
-// Update should be called on the shape whenever
-// it's moved within the space.
+// Update should be called on the shape
+// whenever it's moved within the space.
 func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 	if !space.Contains(shape) {
 		return nil, fmt.Errorf("The space doesn't contain the given shape")
 	}
 
-	err := space.tree.remove(shape)
+	// Remove the shape from all the nodes that don't contain it
+	// anymore and remove all these nodes from the shape's domain.
+	nodesToRemove := []*quadTreeNode{}
 
-	if err != nil {
-		return nil, err
+	for _, node := range shape.nodes() {
+		if !ResolveCollision(node.boundary, shape, false) {
+			nodesToRemove = append(nodesToRemove, node)
+		}
 	}
 
-	nodes, err := space.tree.insert(shape)
+	for _, node := range nodesToRemove {
+		node.shapes.Remove(shape)
+		shape.removeNodes(node)
 
-	if err != nil {
-		return nil, err
+		if node.parent != nil {
+			// TODO: check the sum for the whole subtree, not only
+			// the direct children.
+			northWestLen := len(node.parent.northWest.shapes)
+			northEastLen := len(node.parent.northEast.shapes)
+			southWestLen := len(node.parent.southWest.shapes)
+			southEastLen := len(node.parent.southEast.shapes)
+			sum := northWestLen + northEastLen + southWestLen + southEastLen
+
+			// If the quantity of shapes in the child nodes
+			// is less than the node capacity.
+			if sum <= node.tree.nodeCapacity {
+				err := node.parent.assemble()
+
+				if err != nil {
+					return nil, err
+				}
+			}
+		}
 	}
 
-	shapes := make(map[Vector]Shapes)
+	// Add the shape in all the nodes
+	// that must be in its domain.
+	nodeQueue := queue.New()
+	nodeQueue.Enqueue(space.tree.root)
 
-	for _, node := range nodes {
-		shapes[node.boundary.center] = node.shapes.Copy()
+	for nodeQueue.Len() > 0 {
+		node := nodeQueue.Dequeue().(*quadTreeNode)
+
+		// If the node is already
+		// in the domain, skip it.
+		if shape.containsNode(node) {
+			continue
+		}
+
+		// If the shape is not covered by the node area,
+		// skip it to the next node.
+		if !ResolveCollision(node.boundary, shape, false) {
+			continue
+		}
+
+		// If the node is not a leaf,
+		// skip it.
+		if node.northWest != nil {
+			nodeQueue.Enqueue(node.northEast)
+			nodeQueue.Enqueue(node.northWest)
+			nodeQueue.Enqueue(node.southEast)
+			nodeQueue.Enqueue(node.southWest)
+
+			continue
+		}
+
+		// If the node limit is not exceeded,
+		// add the shape in the list of shapes
+		// covered by the node area.
+		if len(node.shapes) < node.tree.nodeCapacity ||
+			node.level > node.tree.maxLevel {
+			node.shapes.Insert(shape)
+			shape.addNodes(node)
+		} else {
+			// Split the node into four subareas
+			// and add the subnodes in the queue.
+			err := node.split()
+
+			if err != nil {
+				return nil, err
+			}
+
+			nodeQueue.Enqueue(node.northEast)
+			nodeQueue.Enqueue(node.northWest)
+			nodeQueue.Enqueue(node.southEast)
+			nodeQueue.Enqueue(node.southWest)
+		}
 	}
 
-	return shapes, nil
+	// Return all the nodes where
+	// the shape is now located in.
+	cells := map[Vector]Shapes{}
+
+	for _, node := range shape.nodes() {
+		cells[node.boundary.center] = node.shapes.Copy()
+	}
+
+	return cells, nil
 }
 
 // CollidingShapes returns the dictionary where key
@@ -199,11 +280,7 @@ func (space *Space) CollidingShapes() (map[Shape]Shapes, error) {
 // CollidingWith returns the set of shapes colliding with the given shape.
 func (space *Space) CollidingWith(shape Shape) (Shapes, error) {
 	shapes := make(Shapes, 0)
-	nodes, err := space.tree.search(shape)
-
-	if err != nil {
-		return nil, err
-	}
+	nodes := shape.nodes()
 
 	for _, area := range nodes {
 		for item := range area.shapes {
@@ -219,11 +296,7 @@ func (space *Space) CollidingWith(shape Shape) (Shapes, error) {
 // CollidedBy returns the set of shapes collided by the given shape.
 func (space *Space) CollidedBy(shape Shape) (Shapes, error) {
 	shapes := make(Shapes, 0)
-	nodes, err := space.tree.search(shape)
-
-	if err != nil {
-		return nil, err
-	}
+	nodes := shape.nodes()
 
 	for _, area := range nodes {
 		for item := range area.shapes {
@@ -246,11 +319,7 @@ func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff flo
 
 	// Get all the nodes where the shape is located
 	// before movement.
-	areas, err := space.tree.search(shape)
-
-	if err != nil {
-		return nil, err
-	}
+	areas := shape.nodes()
 
 	shape.Move(moveDiff)
 	shape.Rotate(turnDiff)
@@ -326,11 +395,7 @@ func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff 
 
 	// Get all the nodes where the shape is located
 	// before movement.
-	areas, err := space.tree.search(shape)
-
-	if err != nil {
-		return nil, err
-	}
+	areas := shape.nodes()
 
 	shape.Move(moveDiff)
 	shape.Rotate(turnDiff)

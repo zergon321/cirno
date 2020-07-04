@@ -23,6 +23,11 @@ func (tree *quadTree) addLeaf(node *quadTreeNode) error {
 			node.boundary.center.X, node.boundary.center.Y)
 	}
 
+	if node.northWest != nil {
+		return fmt.Errorf("The node {%f, %f} cannot be a leaf",
+			node.boundary.center.X, node.boundary.center.Y)
+	}
+
 	tree.leaves[node] = none{}
 
 	return nil
@@ -80,11 +85,9 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 		// add the shape in the list of shapes
 		// covered by the node area.
 		if len(node.shapes) < node.tree.nodeCapacity ||
-			node.level > node.tree.maxLevel {
+			node.level >= node.tree.maxLevel {
 			node.shapes.Insert(shape)
 			nodes = append(nodes, node)
-
-			continue
 		} else {
 			// Split the node into four subareas
 			// and add the subnodes in the queue.
@@ -93,8 +96,16 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			nodeQueue.Enqueue(node.northEast)
+			nodeQueue.Enqueue(node.northWest)
+			nodeQueue.Enqueue(node.southEast)
+			nodeQueue.Enqueue(node.southWest)
 		}
 	}
+
+	// Add nodes to the shape's domain.
+	shape.addNodes(nodes...)
 
 	return nodes, nil
 }
@@ -145,52 +156,45 @@ func (tree *quadTree) remove(shape Shape) error {
 		return fmt.Errorf("The shape is out of bounds")
 	}
 
-	nodeQueue := queue.New()
-	nodeQueue.Enqueue(tree.root)
+	for _, node := range shape.nodes() {
+		node.shapes.Remove(shape)
 
-	for nodeQueue.Len() > 0 {
-		node := nodeQueue.Dequeue().(*quadTreeNode)
+		if node.parent != nil {
+			northWestLen := len(node.parent.northWest.shapes)
+			northEastLen := len(node.parent.northEast.shapes)
+			southWestLen := len(node.parent.southWest.shapes)
+			southEastLen := len(node.parent.southEast.shapes)
+			sum := northWestLen + northEastLen + southWestLen + southEastLen
 
-		// If the shape is not covered by the node area,
-		// skip it to the next node.
-		if !ResolveCollision(node.boundary, shape, false) {
-			continue
-		}
+			// If the quantity of shapes in the child nodes
+			// is less than the node capacity.
+			if sum <= node.tree.nodeCapacity {
+				err := node.parent.assemble()
 
-		// If the node is a leaf.
-		if node.northWest == nil {
-			node.shapes.Remove(shape)
-
-			if node.parent != nil {
-				northWestLen := len(node.parent.northWest.shapes)
-				northEastLen := len(node.parent.northEast.shapes)
-				southWestLen := len(node.parent.southWest.shapes)
-				southEastLen := len(node.parent.southEast.shapes)
-				sum := northWestLen + northEastLen + southWestLen + southEastLen
-
-				// If the quantity of shapes in the child nodes
-				// is less than the node capacity.
-				if sum <= node.tree.nodeCapacity {
-					err := node.parent.assemble()
-
-					if err != nil {
-						return err
-					}
+				if err != nil {
+					return err
 				}
 			}
-		} else {
-			nodeQueue.Enqueue(node.northEast)
-			nodeQueue.Enqueue(node.northWest)
-			nodeQueue.Enqueue(node.southEast)
-			nodeQueue.Enqueue(node.southWest)
 		}
 	}
+
+	// Remove all the nodes
+	// from the shape's domain.
+	shape.clearNodes()
 
 	return nil
 }
 
 // clear removes all the shapes from the quad tree.
 func (tree *quadTree) clear() error {
+	// Remove all the nodes from
+	// shapes' domains.
+	for node := range tree.leaves {
+		for shape := range node.shapes {
+			shape.clearNodes()
+		}
+	}
+
 	tree.root = &quadTreeNode{
 		tree:     tree,
 		boundary: tree.root.boundary,
@@ -233,13 +237,33 @@ type quadTreeNode struct {
 }
 
 // add adds all the shapes covered by node area
-// in the list of node shapes.
+// in the set of node shapes.
 func (node *quadTreeNode) add(shapes Shapes) {
 	for shape := range shapes {
 		if ResolveCollision(node.boundary, shape, false) {
 			node.shapes.Insert(shape)
+			shape.addNodes(node)
 		}
 	}
+}
+
+// remove removes all the shapes from the set that
+// have the node in their domains.
+func (node *quadTreeNode) remove(shapes Shapes) {
+	for shape := range shapes {
+		node.shapes.Remove(shape)
+		shape.removeNodes(node)
+	}
+}
+
+// clear removes all the shapes from the node
+// removes the node from the shapes' domains.
+func (node *quadTreeNode) clear() {
+	for shape := range node.shapes {
+		shape.removeNodes(node)
+	}
+
+	node.shapes = Shapes{}
 }
 
 // split subdivides the node area into four subareas
@@ -312,12 +336,13 @@ func (node *quadTreeNode) split() error {
 	node.northWest.add(node.shapes)
 	node.southEast.add(node.shapes)
 	node.southWest.add(node.shapes)
-	node.shapes = Shapes{}
+	node.clear()
 
 	// Remove the current node from tree leaves.
 	err := node.tree.removeLeaf(node)
 
 	if err != nil {
+		fmt.Println("Split")
 		return err
 	}
 
@@ -354,28 +379,38 @@ func (node *quadTreeNode) assemble() error {
 	node.add(node.southWest.shapes)
 	node.add(node.southEast.shapes)
 
+	// Clear all the child nodes.
+	node.northWest.clear()
+	node.northEast.clear()
+	node.southWest.clear()
+	node.southEast.clear()
+
 	// Remove all the children from leaves.
 	err := node.tree.removeLeaf(node.northWest)
 
 	if err != nil {
+		fmt.Println("Assemble")
 		return err
 	}
 
 	err = node.tree.removeLeaf(node.northEast)
 
 	if err != nil {
+		fmt.Println("Assemble")
 		return err
 	}
 
 	err = node.tree.removeLeaf(node.southWest)
 
 	if err != nil {
+		fmt.Println("Assemble")
 		return err
 	}
 
 	err = node.tree.removeLeaf(node.southEast)
 
 	if err != nil {
+		fmt.Println("Assemble")
 		return err
 	}
 
