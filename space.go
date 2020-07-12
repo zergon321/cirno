@@ -154,26 +154,6 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 	for _, node := range nodesToRemove {
 		node.shapes.Remove(shape)
 		shape.removeNodes(node)
-
-		if node.parent != nil {
-			// TODO: check the sum for the whole subtree, not only
-			// the direct children.
-			northWestLen := len(node.parent.northWest.shapes)
-			northEastLen := len(node.parent.northEast.shapes)
-			southWestLen := len(node.parent.southWest.shapes)
-			southEastLen := len(node.parent.southEast.shapes)
-			sum := northWestLen + northEastLen + southWestLen + southEastLen
-
-			// If the quantity of shapes in the child nodes
-			// is less than the node capacity.
-			if sum <= node.tree.nodeCapacity {
-				err := node.parent.assemble()
-
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
 	}
 
 	// Add the shape in all the nodes
@@ -211,7 +191,7 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 		// add the shape in the list of shapes
 		// covered by the node area.
 		if len(node.shapes) < node.tree.nodeCapacity ||
-			node.level > node.tree.maxLevel {
+			node.level >= node.tree.maxLevel {
 			node.shapes.Insert(shape)
 			shape.addNodes(node)
 		} else {
@@ -239,6 +219,12 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 	}
 
 	return cells, nil
+}
+
+// Rebuild rebuilds the space's index
+// of fhapes in purpose to optimize it.
+func (space *Space) Rebuild() error {
+	return space.tree.redistribute()
 }
 
 // CollidingShapes returns the dictionary where key

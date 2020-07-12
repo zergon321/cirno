@@ -56,9 +56,10 @@ func run() {
 	// Setup physics.
 	rand.Seed(time.Now().UnixNano())
 
-	space, err := cirno.NewSpace(5, 20, width*2, height*2,
+	space, err := cirno.NewSpace(10, 20, width*2, height*2,
 		cirno.Zero, cirno.NewVector(width, height), false)
 	handleError(err)
+	spaceTimer := time.Tick(5 * time.Second)
 
 	particles := make([]*cirno.Circle, 0)
 
@@ -160,6 +161,16 @@ func run() {
 				_, err = space.Update(particle)
 				handleError(err)
 			}
+		}
+
+		// Check if the time has come to
+		// reorganize the quad tree.
+		select {
+		case <-spaceTimer:
+			err = space.Rebuild()
+			handleError(err)
+
+		default:
 		}
 
 		// Rendering.

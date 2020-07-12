@@ -18,7 +18,7 @@ type quadTree struct {
 
 // addLeaf adds the quad tree node in the list of quad tree leaves.
 func (tree *quadTree) addLeaf(node *quadTreeNode) error {
-	if _, exists := tree.leaves[node]; exists {
+	if tree.containsLeaf(node) {
 		return fmt.Errorf("The leaf {%f, %f} already exists",
 			node.boundary.center.X, node.boundary.center.Y)
 	}
@@ -36,7 +36,7 @@ func (tree *quadTree) addLeaf(node *quadTreeNode) error {
 // removeLeaf removes the specified quad tree node from the list
 // of quad tree leaves.
 func (tree *quadTree) removeLeaf(node *quadTreeNode) error {
-	if _, exists := tree.leaves[node]; !exists {
+	if !tree.containsLeaf(node) {
 		return fmt.Errorf("The leaf {%f, %f} doesn't exist",
 			node.boundary.center.X, node.boundary.center.Y)
 	}
@@ -44,6 +44,14 @@ func (tree *quadTree) removeLeaf(node *quadTreeNode) error {
 	delete(tree.leaves, node)
 
 	return nil
+}
+
+// containsLeaf returns true if the quad tree contains
+// the given node among the leaves, and false otherwise.
+func (tree *quadTree) containsLeaf(node *quadTreeNode) bool {
+	_, exists := tree.leaves[node]
+
+	return exists
 }
 
 // insert inserts the given shape into appropriate nodes
@@ -158,29 +166,57 @@ func (tree *quadTree) remove(shape Shape) error {
 
 	for _, node := range shape.nodes() {
 		node.shapes.Remove(shape)
-
-		if node.parent != nil {
-			northWestLen := len(node.parent.northWest.shapes)
-			northEastLen := len(node.parent.northEast.shapes)
-			southWestLen := len(node.parent.southWest.shapes)
-			southEastLen := len(node.parent.southEast.shapes)
-			sum := northWestLen + northEastLen + southWestLen + southEastLen
-
-			// If the quantity of shapes in the child nodes
-			// is less than the node capacity.
-			if sum <= node.tree.nodeCapacity {
-				err := node.parent.assemble()
-
-				if err != nil {
-					return err
-				}
-			}
-		}
 	}
 
 	// Remove all the nodes
 	// from the shape's domain.
 	shape.clearNodes()
+
+	return nil
+}
+
+// redistribute removes all the unrequired leafs
+// and subtrees containing them.
+func (tree *quadTree) redistribute() error {
+	nodeQueue := queue.New()
+
+	for leaf := range tree.leaves {
+		nodeQueue.Enqueue(leaf)
+	}
+
+	for nodeQueue.Len() > 0 {
+		node := nodeQueue.Dequeue().(*quadTreeNode)
+
+		if node.parent == nil {
+			continue
+		}
+
+		parent := node.parent
+
+		// Check if all the child nodes are leafs.
+		if tree.containsLeaf(parent.northWest) &&
+			tree.containsLeaf(parent.northEast) &&
+			tree.containsLeaf(parent.southWest) &&
+			tree.containsLeaf(parent.southEast) {
+
+			shapes := Shapes{}
+
+			shapes.Merge(parent.northWest.shapes)
+			shapes.Merge(parent.northEast.shapes)
+			shapes.Merge(parent.southWest.shapes)
+			shapes.Merge(parent.southEast.shapes)
+
+			if len(shapes) <= tree.nodeCapacity {
+				err := parent.assemble()
+
+				if err != nil {
+					return err
+				}
+
+				nodeQueue.Enqueue(parent)
+			}
+		}
+	}
 
 	return nil
 }
@@ -342,7 +378,6 @@ func (node *quadTreeNode) split() error {
 	err := node.tree.removeLeaf(node)
 
 	if err != nil {
-		fmt.Println("Split")
 		return err
 	}
 
@@ -389,33 +424,22 @@ func (node *quadTreeNode) assemble() error {
 	err := node.tree.removeLeaf(node.northWest)
 
 	if err != nil {
-		fmt.Println("Assemble")
 		return err
 	}
 
 	err = node.tree.removeLeaf(node.northEast)
 
 	if err != nil {
-		fmt.Println("Assemble")
 		return err
 	}
 
 	err = node.tree.removeLeaf(node.southWest)
 
 	if err != nil {
-		fmt.Println("Assemble")
 		return err
 	}
 
 	err = node.tree.removeLeaf(node.southEast)
-
-	if err != nil {
-		fmt.Println("Assemble")
-		return err
-	}
-
-	// Add the parent node to the tree leaves.
-	err = node.tree.addLeaf(node)
 
 	if err != nil {
 		return err
@@ -431,6 +455,13 @@ func (node *quadTreeNode) assemble() error {
 	node.northEast = nil
 	node.southWest = nil
 	node.southEast = nil
+
+	// Add the parent node to the tree leaves.
+	err = node.tree.addLeaf(node)
+
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

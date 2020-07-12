@@ -45,8 +45,18 @@ func (shapes Shapes) Contains(shape Shape) bool {
 }
 
 // Insert adds the given shape in the set of shapes.
-func (shapes Shapes) Insert(shape Shape) {
-	shapes[shape] = none{}
+func (shapes Shapes) Insert(shapesToInsert ...Shape) {
+	for _, shape := range shapesToInsert {
+		shapes[shape] = none{}
+	}
+}
+
+// Merge adds all the shapes from
+// the other set to the current set.
+func (shapes Shapes) Merge(otherShapes Shapes) {
+	for shape := range otherShapes {
+		shapes[shape] = none{}
+	}
 }
 
 // Remove removes the specified shape from the set.
