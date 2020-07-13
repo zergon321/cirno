@@ -8,6 +8,8 @@ type Shape interface {
 	Move(Vector) Vector
 	Rotate(float64) float64
 	RotateRadians(float64) float64
+	RotateAround(float64, Vector) Vector
+	RotateAroundRadians(float64, Vector) Vector
 	SetPosition(Vector) Vector
 	SetAngle(float64) float64
 	SetAngleRadians(float64) float64

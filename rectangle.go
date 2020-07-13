@@ -98,6 +98,21 @@ func (r *Rectangle) RotateRadians(angle float64) float64 {
 	return r.Rotate(angle*RadToDeg) * DegToRad
 }
 
+// RotateAround rotates the rectangle around the specified base point.
+func (r *Rectangle) RotateAround(angle float64, base Vector) Vector {
+	r.center = r.center.RotateAround(angle, base)
+
+	return r.center
+}
+
+// RotateAroundRadians rotates the rectangle around the specified base point
+// at the angle in radians.
+func (r *Rectangle) RotateAroundRadians(angle float64, base Vector) Vector {
+	r.center = r.center.RotateAroundRadians(angle, base)
+
+	return r.center
+}
+
 // Max returns the upper right point of the rectangle with no rotation.
 func (r *Rectangle) Max() Vector {
 	return r.center.Add(r.xAxis.MultiplyByScalar(r.extents.X).

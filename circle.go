@@ -65,6 +65,22 @@ func (c *Circle) RotateRadians(angle float64) float64 {
 	return 0
 }
 
+// RotateAround rotates the circle around the specified point
+// changing the circle's position.
+func (c *Circle) RotateAround(angle float64, base Vector) Vector {
+	c.center = c.center.RotateAround(angle, base)
+
+	return c.center
+}
+
+// RotateAroundRadians rotates the circle around the base point at the
+// specified angle in radians.
+func (c *Circle) RotateAroundRadians(angle float64, base Vector) Vector {
+	c.center = c.center.RotateAroundRadians(angle, base)
+
+	return c.center
+}
+
 // SetPosition sets the circle position to the given
 // coordinates.
 func (c *Circle) SetPosition(pos Vector) Vector {
