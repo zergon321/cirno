@@ -104,19 +104,29 @@ func (l *Line) RotateRadians(angle float64) float64 {
 
 // RotateAround rotates the line around the base point.
 func (l *Line) RotateAround(angle float64, base Vector) Vector {
-	l.p = l.p.RotateAround(angle, base)
-	l.q = l.q.RotateAround(angle, base)
+	center := l.Center()
+	cp := l.p.Subtract(center)
+	cq := l.q.Subtract(center)
 
-	return l.Center()
+	center = center.RotateAround(angle, base)
+	l.p = center.Add(cp)
+	l.q = center.Add(cq)
+
+	return center
 }
 
 // RotateAroundRadians rotates the line around the base point at the
 // angle in radians.
 func (l *Line) RotateAroundRadians(angle float64, base Vector) Vector {
-	l.p = l.p.RotateAroundRadians(angle, base)
-	l.q = l.q.RotateAroundRadians(angle, base)
+	center := l.Center()
+	cp := l.p.Subtract(center)
+	cq := l.q.Subtract(center)
 
-	return l.Center()
+	center = center.RotateAroundRadians(angle, base)
+	l.p = center.Add(cp)
+	l.q = center.Add(cq)
+
+	return center
 }
 
 // Length returns the length of the line.
