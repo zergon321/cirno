@@ -29,9 +29,9 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 		br.rect.Center().Y)
 	rightRayOrigin := cirno.NewVector(br.rect.Center().X+br.rect.Width()/2,
 		br.rect.Center().Y)
-	leftShape := space.Raycast(leftRayOrigin, cirno.Down, br.rect.Height()/2+4,
+	leftShape, _ := space.Raycast(leftRayOrigin, cirno.Down, br.rect.Height()/2+4,
 		br.rect.GetMask())
-	rightShape := space.Raycast(rightRayOrigin, cirno.Down, br.rect.Height()/2+4,
+	rightShape, _ := space.Raycast(rightRayOrigin, cirno.Down, br.rect.Height()/2+4,
 		br.rect.GetMask())
 
 	// Change movement direction
@@ -47,7 +47,7 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 	movement := br.direction.MultiplyByScalar(br.speed * deltaTime)
 
 	// Detect player and stop if player detected.
-	player := space.Raycast(br.rect.Center(), br.direction, 384, playerID)
+	player, _ := space.Raycast(br.rect.Center(), br.direction, 384, playerID)
 
 	if player != nil {
 		movement = cirno.Zero
