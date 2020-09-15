@@ -72,9 +72,9 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		p.rect.Center().Y)
 	rightRayOrigin := cirno.NewVector(p.rect.Center().X+p.rect.Width()/2,
 		p.rect.Center().Y)
-	leftShape := space.Raycast(leftRayOrigin, cirno.Down,
+	leftShape, _ := space.Raycast(leftRayOrigin, cirno.Down,
 		p.rect.Height()/2+4, p.rect.GetMask())
-	rightShape := space.Raycast(rightRayOrigin, cirno.Down,
+	rightShape, _ := space.Raycast(rightRayOrigin, cirno.Down,
 		p.rect.Height()/2+4, p.rect.GetMask())
 	grounded := leftShape != nil || rightShape != nil
 
