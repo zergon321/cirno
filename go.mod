@@ -8,7 +8,7 @@ require (
 	github.com/faiface/mainthread v0.0.0-20171120011319-8b78f0a41ae3 // indirect
 	github.com/faiface/pixel v0.8.0
 	github.com/go-gl/gl v0.0.0-20190320180904-bf2b1f2f34d7 // indirect
-	github.com/go-gl/glfw/v3.3/glfw v0.0.0-20200222043503-6f7a984d4dc4 // indirect
+	github.com/go-gl/glfw v0.0.0-20200707082815-5321531c36a2 // indirect
 	github.com/go-gl/mathgl v0.0.0-20190713194549-592312d8590a // indirect
 	github.com/golang-collections/collections v0.0.0-20130729185459-604e922904d3
 	github.com/kr/pretty v0.1.0 // indirect
