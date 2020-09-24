@@ -4,6 +4,9 @@ import (
 	"math"
 )
 
+// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
+// не происходит проверка аргумента на nil (пустой указатель).
+
 // NormalTo returns the normal from the given circle
 // to the other shape.
 func (circle *Circle) NormalTo(shape Shape) Vector {
@@ -159,6 +162,9 @@ func (line *Line) NormalToRectangle(rect *Rectangle) Vector {
 func (rect *Rectangle) NormalToCircle(circle *Circle) Vector {
 	return circle.NormalToRectangle(rect).MultiplyByScalar(-1)
 }
+
+// ОШИБКА ВЫЧИСЛЕНИЯ: нормаль иногда указывает в направлении,
+// противоположном тому, в котором лежит фигура.
 
 // NormalToLine returns the normal between the given rectangle
 // and the line.

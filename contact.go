@@ -5,6 +5,9 @@ import (
 	"reflect"
 )
 
+// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
+// не происходит проверка аргумента на nil (пустой указатель).
+
 // Contact returns the contact points between two given shapes
 // (if they exist).
 func Contact(one, other Shape) []Vector {
@@ -284,6 +287,9 @@ func ContactCircleToCircle(one, other *Circle) []Vector {
 	if math.Abs(r+R-d) < Epsilon {
 		return []Vector{p}
 	}
+
+	// ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0,
+	// если радиус круга равен 0.
 
 	// Compute two intersection points.
 	c := NewVector(Cx, Cy)

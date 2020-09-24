@@ -4,6 +4,9 @@ import (
 	"github.com/golang-collections/collections/queue"
 )
 
+// ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0, если
+// обе компоненты вектора направления луча равны 0.
+
 // Raycast casts a ray in the space and returns the hit shape closest
 // to the origin of the ray.
 //

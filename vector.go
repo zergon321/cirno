@@ -99,6 +99,9 @@ func (v Vector) Project(axis Vector) Vector {
 	return axis.MultiplyByScalar(factor)
 }
 
+// ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0, если
+// обе компоненты вектора равны 0.
+
 // Normalize returns a normalized vector with magnitude of 1.
 func (v Vector) Normalize() Vector {
 	length := v.Magnitude()

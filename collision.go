@@ -5,6 +5,9 @@ import (
 	"reflect"
 )
 
+// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
+// не происходит проверка аргумента на nil (пустой указатель).
+
 // ResolveCollision assumes types of the given shapes
 // and detects if they collide.
 func ResolveCollision(one, another Shape, useTags bool) bool {

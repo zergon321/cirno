@@ -205,6 +205,8 @@ func (l *Line) ParallelTo(other *Line) bool {
 	return l.CollinearTo(other) && !l.SameLineWith(other)
 }
 
+// ОШИБКА ВЫЧИСЛЕНИЯ: деление на 0, если длина линни равна 0.
+
 // ProjectPoint returns the projection of the point
 // onto the line.
 func (l *Line) ProjectPoint(point Vector) Vector {

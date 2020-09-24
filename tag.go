@@ -11,6 +11,9 @@ type tag struct {
 	mask int32
 }
 
+// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
+// не происходит проверка аргумента на nil (пустой указатель).
+
 // ShouldCollide returns true if the shape should
 // collide another one accodring to their tags.
 func (t tag) ShouldCollide(other Shape) bool {

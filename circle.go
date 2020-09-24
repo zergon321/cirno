@@ -114,6 +114,9 @@ func (c *Circle) ContainsPoint(point Vector) bool {
 	return d.SquaredMagnitude() <= c.radius*c.radius
 }
 
+// ОШИБКА ИНТЕРФЕЙСА: возможно указание отрицательного
+//  или нулевого значения для радиуса окружности.
+
 // NewCircle create a new circle with the given parameters.
 func NewCircle(position Vector, radius float64) *Circle {
 	circle := new(Circle)

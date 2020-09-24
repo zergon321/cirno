@@ -48,6 +48,9 @@ func (space *Space) UseTags() bool {
 	return space.useTags
 }
 
+// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: отсутствует проверка значения на nil
+// (пустой указатель).
+
 // InBounds detects if the center the given shape
 // is within the space bounds.
 func (space *Space) InBounds(shape Shape) bool {

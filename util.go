@@ -6,6 +6,9 @@ import (
 	"reflect"
 )
 
+// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
+// не происходит проверка аргумента на nil (пустой указатель).
+
 const (
 	// RadToDeg is a factor to transfrom radians to degrees.
 	RadToDeg float64 = 180.0 / math.Pi
