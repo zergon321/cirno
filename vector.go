@@ -135,6 +135,9 @@ func Angle(a, b Vector) float64 {
 	return AngleRadians(a, b) * RadToDeg
 }
 
+// ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0, если
+// длина одного из векторов равна 0.
+
 // AngleRadians returns the angle between two vectors (in radians).
 func AngleRadians(a, b Vector) float64 {
 	cosine := Dot(a, b) / (a.Magnitude() * b.Magnitude())
