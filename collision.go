@@ -132,6 +132,12 @@ func IntersectionLineToLine(a, b *Line) bool {
 	aMin, aMax := a.GetBoundingBox()
 	bMin, bMax := b.GetBoundingBox()
 
+	// If one line fully contains another.
+	if a.ContainsPoint(b.p) && a.ContainsPoint(b.q) ||
+		b.ContainsPoint(a.p) && b.ContainsPoint(a.q) {
+		return true
+	}
+
 	return boundingBoxesIntersect(aMin, aMax, bMin, bMax) &&
 		a.touchesOrCrosses(b) && b.touchesOrCrosses(a)
 }

@@ -11,8 +11,8 @@ func TestGetRectangleVertices(t *testing.T) {
 	rect := cirno.NewRectangle(cirno.NewVector(18, 13), 4, 4, 45)
 	vertices := rect.Vertices()
 
-	assert.Equal(t, vertices[0], cirno.NewVector(18, 10))
-	assert.Equal(t, vertices[1], cirno.NewVector(15, 13))
-	assert.Equal(t, vertices[2], cirno.NewVector(18, 16))
-	assert.Equal(t, vertices[3], cirno.NewVector(21, 13))
+	assert.Equal(t, cirno.NewVector(18, 10), vertices[0])
+	assert.Equal(t, cirno.NewVector(15, 13), vertices[1])
+	assert.Equal(t, cirno.NewVector(18, 16), vertices[2])
+	assert.Equal(t, cirno.NewVector(21, 13), vertices[3])
 }

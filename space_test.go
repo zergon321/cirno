@@ -216,5 +216,8 @@ func TestQuadTree(t *testing.T) {
 		assert.Nil(t, err)
 	}
 
+	err = space.Rebuild()
+	assert.Nil(t, err)
+
 	assert.Equal(t, 7, len(space.Cells()))
 }
