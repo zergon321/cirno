@@ -1,6 +1,7 @@
 package cirno_test
 
 import (
+	"fmt"
 	"math"
 	"testing"
 
@@ -67,4 +68,16 @@ func TestVectorAngle(t *testing.T) {
 	res := 90.0
 
 	assert.Equal(t, cirno.Angle(v1, v2), res)
+}
+
+func TestVectorPerpendicular(t *testing.T) {
+	v1 := cirno.NewVector(2, 3)
+	vp1 := v1.PerpendicularClockwise()
+	vp2 := v1.PerpendicularCounterClockwise()
+
+	fmt.Println(vp1)
+	fmt.Println(vp2)
+
+	assert.Equal(t, cirno.Angle(v1, vp1), 90.0)
+	assert.Equal(t, cirno.Angle(v1, vp2), 90.0)
 }

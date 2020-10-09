@@ -151,6 +151,20 @@ func AngleRadians(a, b Vector) float64 {
 	return math.Acos(cosine)
 }
 
+// PerpendicularClockwise returns a new vector
+// perpendicular to the given one and turned in
+// a clockwise direction relatively to it.
+func (v Vector) PerpendicularClockwise() Vector {
+	return NewVector(v.Y, -v.X)
+}
+
+// PerpendicularCounterClockwise returns a new vector
+// perpendicular to the given one and turned in
+// a clockwise direction relatively to it.
+func (v Vector) PerpendicularCounterClockwise() Vector {
+	return NewVector(-v.Y, v.X)
+}
+
 // NewVector returns a new vector with the given coordinates.
 func NewVector(x, y float64) Vector {
 	return Vector{X: x, Y: y}
