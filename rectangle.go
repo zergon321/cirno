@@ -1,9 +1,5 @@
 package cirno
 
-import (
-	"fmt"
-)
-
 // Rectangle represents an oriented euclidian rectangle.
 type Rectangle struct {
 	center  Vector
@@ -140,9 +136,6 @@ func (r *Rectangle) Vertices() [4]Vector {
 		Add(r.yAxis.MultiplyByScalar(r.extents.Y)))
 	d := r.center.Add(r.xAxis.MultiplyByScalar(r.extents.X).
 		Add(r.yAxis.MultiplyByScalar(-r.extents.Y)))
-
-	fmt.Println(r.xAxis.MultiplyByScalar(-r.extents.X))
-	fmt.Println(r.yAxis.MultiplyByScalar(-r.extents.Y))
 
 	return [4]Vector{a, b, c, d}
 }

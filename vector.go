@@ -1,7 +1,6 @@
 package cirno
 
 import (
-	"fmt"
 	"math"
 )
 
@@ -113,9 +112,6 @@ func (v Vector) Normalize() Vector {
 // approximately equal to the other one, and false
 // otherwise.
 func (v Vector) ApproximatelyEqual(other Vector) bool {
-	fmt.Println("dx:", math.Abs(v.X-other.X))
-	fmt.Println("dy:", math.Abs(v.Y-other.Y))
-
 	return math.Abs(v.X-other.X) < Epsilon &&
 		math.Abs(v.Y-other.Y) < Epsilon
 }
