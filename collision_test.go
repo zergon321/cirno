@@ -60,6 +60,9 @@ func TestLinesIntersection(t *testing.T) {
 	l12 := cirno.NewLine(cirno.NewVector(5, 2), cirno.NewVector(5, 3))
 	l13 := cirno.NewLine(cirno.NewVector(5, 4), cirno.NewVector(8, 8))
 	l14 := cirno.NewLine(cirno.NewVector(2, 5), cirno.NewVector(7, 1))
+	l15 := cirno.NewLine(cirno.NewVector(3, 3), cirno.NewVector(4, 3))
+	l16 := cirno.NewLine(cirno.NewVector(3, 4), cirno.NewVector(4, 4))
+	l17 := cirno.NewLine(cirno.NewVector(3, 3), cirno.NewVector(4, 4))
 
 	assert.False(t, cirno.IntersectionLineToLine(l1, l2))
 	assert.True(t, cirno.IntersectionLineToLine(l3, l4))
@@ -68,6 +71,10 @@ func TestLinesIntersection(t *testing.T) {
 	assert.True(t, cirno.IntersectionLineToLine(l7, l8))
 	assert.True(t, cirno.IntersectionLineToLine(l11, l12))
 	assert.False(t, cirno.IntersectionLineToLine(l13, l14))
+	assert.True(t, cirno.IntersectionLineToLine(l3, l15))
+	assert.True(t, cirno.IntersectionLineToLine(l3, l16))
+	assert.True(t, cirno.IntersectionLineToLine(l3, l3))
+	assert.True(t, cirno.IntersectionLineToLine(l5, l17))
 }
 
 func TestLineCircleIntersection(t *testing.T) {
