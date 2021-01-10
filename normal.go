@@ -189,12 +189,36 @@ func (rect *Rectangle) NormalToLine(line *Line) Vector {
 
 	if sepAx {
 		normal = rect.xAxis
+		sepLine := NewLine(rect.center,
+			rect.center.Add(rect.yAxis))
+
+		if sepLine.Orientation(line.Center()) < 0 {
+			normal = normal.MultiplyByScalar(-1)
+		}
 	} else if sepAy {
 		normal = rect.yAxis
+		sepLine := NewLine(rect.center,
+			rect.center.Add(rect.xAxis))
+
+		if sepLine.Orientation(line.Center()) > 0 {
+			normal = normal.MultiplyByScalar(-1)
+		}
 	} else if sepLineX {
 		normal = lineAxisX
+		sepLine := NewLine(line.Center(),
+			line.Center().Add(lineAxisY))
+
+		if sepLine.Orientation(rect.center) > 0 {
+			normal = normal.MultiplyByScalar(-1)
+		}
 	} else if sepLineY {
 		normal = lineAxisY
+		sepLine := NewLine(line.Center(),
+			line.Center().Add(lineAxisX))
+
+		if sepLine.Orientation(rect.center) < 0 {
+			normal = normal.MultiplyByScalar(-1)
+		}
 	}
 
 	return normal
