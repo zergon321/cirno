@@ -230,12 +230,36 @@ func (rect *Rectangle) NormalToRectangle(other *Rectangle) Vector {
 
 	if sepAx {
 		normal = rect.xAxis
+		sepLine := NewLine(rect.center,
+			rect.center.Add(rect.yAxis))
+
+		if sepLine.Orientation(other.center) < 0 {
+			normal = normal.MultiplyByScalar(-1)
+		}
 	} else if sepAy {
 		normal = rect.yAxis
+		sepLine := NewLine(rect.center,
+			rect.center.Add(rect.xAxis))
+
+		if sepLine.Orientation(other.center) > 0 {
+			normal = normal.MultiplyByScalar(-1)
+		}
 	} else if sepBx {
 		normal = other.xAxis
+		sepLine := NewLine(other.center,
+			other.center.Add(other.yAxis))
+
+		if sepLine.Orientation(rect.center) > 0 {
+			normal = normal.MultiplyByScalar(-1)
+		}
 	} else if sepBy {
 		normal = other.yAxis
+		sepLine := NewLine(other.center,
+			other.center.Add(other.xAxis))
+
+		if sepLine.Orientation(rect.center) < 0 {
+			normal = normal.MultiplyByScalar(-1)
+		}
 	}
 
 	return normal
