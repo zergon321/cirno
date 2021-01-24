@@ -142,7 +142,7 @@ func (r *Rectangle) Vertices() [4]Vector {
 
 // NewRectangle returns a new rectangle with specified parameters.
 func NewRectangle(position Vector, width, height, angle float64) *Rectangle {
-	rect := new(Rectangle)
+	rect := &Rectangle{}
 
 	rect.center = position
 	rect.extents = NewVector(width/2.0, height/2.0)

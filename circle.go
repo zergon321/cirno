@@ -119,7 +119,7 @@ func (c *Circle) ContainsPoint(point Vector) bool {
 
 // NewCircle create a new circle with the given parameters.
 func NewCircle(position Vector, radius float64) *Circle {
-	circle := new(Circle)
+	circle := &Circle{}
 
 	circle.center = position
 	circle.radius = radius
