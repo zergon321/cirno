@@ -27,7 +27,7 @@ var (
 )
 
 func parseFlags() {
-	flag.StringVar(&controlledShape, "shape", "line",
+	flag.StringVar(&controlledShape, "shape", "circle",
 		"The shape controlled during execution of the demo.")
 	flag.BoolVar(&vsync, "vsync", true, "Enable vertical synchronization.")
 

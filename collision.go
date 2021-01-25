@@ -95,7 +95,6 @@ func CollisionRectangleToCircle(rect *Rectangle, circle *Circle) bool {
 	theta := -rect.angle
 	t = t.Rotate(theta)
 	localCircle := NewCircle(t, circle.radius)
-	//localRect := NewRectangle(NewVector(0, 0), rect.Width(), rect.Height(), 0.0)
 	localRect := &Rectangle{
 		center:  NewVector(0, 0),
 		extents: NewVector(rect.Width()/2, rect.Height()/2),
