@@ -12,6 +12,11 @@ type Rectangle struct {
 	domain
 }
 
+// TypeName returns the name of the shape type.
+func (r *Rectangle) TypeName() string {
+	return "Rectangle"
+}
+
 // Center returns the coordinates of the center of the rectangle.
 func (r *Rectangle) Center() Vector {
 	return r.center

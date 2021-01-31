@@ -16,6 +16,11 @@ type Line struct {
 	domain
 }
 
+// TypeName returns the name of the shape type.
+func (l *Line) TypeName() string {
+	return "Line"
+}
+
 // Center returns the coordinates of the middle point
 // between p and q.
 func (l *Line) Center() Vector {

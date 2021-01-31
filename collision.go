@@ -2,7 +2,6 @@ package cirno
 
 import (
 	"math"
-	"reflect"
 )
 
 // ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
@@ -15,9 +14,7 @@ func ResolveCollision(one, another Shape, useTags bool) bool {
 		return false
 	}
 
-	oneType := reflect.TypeOf(one).Elem()
-	anotherType := reflect.TypeOf(another).Elem()
-	id := oneType.Name() + "_" + anotherType.Name()
+	id := one.TypeName() + "_" + another.TypeName()
 
 	switch id {
 	case "Rectangle_Rectangle":

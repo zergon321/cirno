@@ -2,6 +2,7 @@ package cirno
 
 // Shape represents a shape in the space.
 type Shape interface {
+	TypeName() string
 	Center() Vector
 	Angle() float64
 	AngleRadians() float64

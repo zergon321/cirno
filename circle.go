@@ -9,6 +9,11 @@ type Circle struct {
 	domain
 }
 
+// TypeName returns the name of the shape type.
+func (c *Circle) TypeName() string {
+	return "Circle"
+}
+
 // Center returns the coordinates of the center
 // of the circle.
 func (c *Circle) Center() Vector {
