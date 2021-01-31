@@ -1,7 +1,7 @@
 package cirno
 
 import (
-	"github.com/golang-collections/collections/queue"
+	queue "github.com/zergon321/arrayqueue"
 )
 
 // ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0, если
@@ -18,7 +18,7 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 
 	ray := NewLine(origin, origin.Add(direction.Normalize().MultiplyByScalar(distance)))
 	ray.SetMask(mask)
-	nodeQueue := queue.New()
+	nodeQueue := queue.NewQueue()
 	nodeQueue.Enqueue(space.tree.root)
 	minExists := false
 
@@ -28,7 +28,7 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 		hit                Vector
 	)
 
-	for nodeQueue.Len() > 0 {
+	for nodeQueue.Length() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
 		if !IntersectionLineToRectangle(ray, node.boundary) {
@@ -71,11 +71,11 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 // Boxcast casts a box in the space and returns all the
 // shapes overlapped by this box.
 func (space *Space) Boxcast(rect *Rectangle) Shapes {
-	nodeQueue := queue.New()
+	nodeQueue := queue.NewQueue()
 	nodeQueue.Enqueue(space.tree.root)
 	shapes := make(Shapes, 0)
 
-	for nodeQueue.Len() > 0 {
+	for nodeQueue.Length() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
 		if !CollisionRectangleToRectangle(rect, node.boundary) {
@@ -97,11 +97,11 @@ func (space *Space) Boxcast(rect *Rectangle) Shapes {
 // Circlecast casts a circle in the space and returns all the
 // shapes overlapped by the circle.
 func (space *Space) Circlecast(circle *Circle) Shapes {
-	nodeQueue := queue.New()
+	nodeQueue := queue.NewQueue()
 	nodeQueue.Enqueue(space.tree.root)
 	shapes := make(Shapes, 0)
 
-	for nodeQueue.Len() > 0 {
+	for nodeQueue.Length() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
 		if !CollisionRectangleToCircle(node.boundary, circle) {

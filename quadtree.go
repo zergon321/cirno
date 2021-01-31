@@ -3,7 +3,7 @@ package cirno
 import (
 	"fmt"
 
-	"github.com/golang-collections/collections/queue"
+	queue "github.com/zergon321/arrayqueue"
 )
 
 // quadTree is an implementation of
@@ -66,10 +66,10 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 	}
 
 	nodes := []*quadTreeNode{}
-	nodeQueue := queue.New()
+	nodeQueue := queue.NewQueue()
 	nodeQueue.Enqueue(tree.root)
 
-	for nodeQueue.Len() > 0 {
+	for nodeQueue.Length() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
 		// If the shape is not covered by the node area,
@@ -129,10 +129,10 @@ func (tree *quadTree) search(shape Shape) ([]*quadTreeNode, error) {
 	}
 
 	nodes := []*quadTreeNode{}
-	nodeQueue := queue.New()
+	nodeQueue := queue.NewQueue()
 	nodeQueue.Enqueue(tree.root)
 
-	for nodeQueue.Len() > 0 {
+	for nodeQueue.Length() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
 		// If the shape is not covered by the node area,
@@ -178,13 +178,13 @@ func (tree *quadTree) remove(shape Shape) error {
 // redistribute removes all the unrequired leafs
 // and subtrees containing them.
 func (tree *quadTree) redistribute() error {
-	nodeQueue := queue.New()
+	nodeQueue := queue.NewQueue()
 
 	for leaf := range tree.leaves {
 		nodeQueue.Enqueue(leaf)
 	}
 
-	for nodeQueue.Len() > 0 {
+	for nodeQueue.Length() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
 		if node.parent == nil {
