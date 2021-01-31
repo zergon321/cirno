@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"reflect"
 
-	queue "github.com/zergon321/arrayqueue"
+	"github.com/golang-collections/collections/queue"
 )
 
 // Space represents a geometric space
@@ -161,10 +161,10 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 
 	// Add the shape in all the nodes
 	// that must be in its domain.
-	nodeQueue := queue.NewQueue()
+	nodeQueue := queue.New()
 	nodeQueue.Enqueue(space.tree.root)
 
-	for nodeQueue.Length() > 0 {
+	for nodeQueue.Len() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
 		// If the node is already
