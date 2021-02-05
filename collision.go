@@ -83,6 +83,8 @@ func CollisionRectangleToRectangle(a, b *Rectangle) bool {
 	return true
 }
 
+// TODO: use AABB.
+
 // CollisionRectangleToCircle detects if there's an intersection between
 // an oriented rectangle and a circle.
 func CollisionRectangleToCircle(rect *Rectangle, circle *Circle) bool {
