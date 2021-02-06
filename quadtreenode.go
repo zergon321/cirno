@@ -11,7 +11,7 @@ type quadTreeNode struct {
 	northWest *quadTreeNode
 	southWest *quadTreeNode
 	southEast *quadTreeNode
-	boundary  *Rectangle
+	boundary  *aabb
 	shapes    Shapes
 	level     int
 }
@@ -20,7 +20,7 @@ type quadTreeNode struct {
 // in the set of node shapes.
 func (node *quadTreeNode) add(shapes Shapes) {
 	for shape := range shapes {
-		if ResolveCollision(node.boundary, shape, false) {
+		if node.boundary.collidesShape(shape) {
 			node.shapes.Insert(shape)
 			shape.addNodes(node)
 		}
@@ -52,63 +52,45 @@ func (node *quadTreeNode) clear() {
 func (node *quadTreeNode) split() error {
 	nextLevel := node.level + 1
 
-	// Compute centers for new areas.
-	neRectCenter := node.boundary.center.Add(NewVector(
-		node.boundary.extents.X/2.0,
-		node.boundary.extents.Y/2.0,
-	))
-	nwRectCenter := node.boundary.center.Add(NewVector(
-		-node.boundary.extents.X/2.0,
-		node.boundary.extents.Y/2.0,
-	))
-	seRectCenter := node.boundary.center.Add(NewVector(
-		node.boundary.extents.X/2.0,
-		-node.boundary.extents.Y/2.0,
-	))
-	swRectCenter := node.boundary.center.Add(NewVector(
-		-node.boundary.extents.X/2.0,
-		-node.boundary.extents.Y/2.0,
-	))
+	// Compute the center of the original boundary
+	// the other points to form new boundaries.
+	center := node.boundary.center()
+	northPoint := NewVector(center.X, node.boundary.max.Y)
+	southPoint := NewVector(center.X, node.boundary.min.Y)
+	westPoint := NewVector(node.boundary.min.X, center.Y)
+	eastPoint := NewVector(node.boundary.max.X, center.Y)
 
 	// Create new nodes.
 	node.northEast = &quadTreeNode{
-		tree:   node.tree,
-		parent: node,
-		boundary: NewRectangle(neRectCenter,
-			node.boundary.extents.X,
-			node.boundary.extents.Y, 0.0),
-		level:  nextLevel,
-		shapes: Shapes{},
+		tree:     node.tree,
+		parent:   node,
+		boundary: newAABB(center, node.boundary.max),
+		level:    nextLevel,
+		shapes:   Shapes{},
 	}
 
 	node.northWest = &quadTreeNode{
-		tree:   node.tree,
-		parent: node,
-		boundary: NewRectangle(nwRectCenter,
-			node.boundary.extents.X,
-			node.boundary.extents.Y, 0.0),
-		level:  nextLevel,
-		shapes: Shapes{},
+		tree:     node.tree,
+		parent:   node,
+		boundary: newAABB(westPoint, northPoint),
+		level:    nextLevel,
+		shapes:   Shapes{},
 	}
 
 	node.southEast = &quadTreeNode{
-		tree:   node.tree,
-		parent: node,
-		boundary: NewRectangle(seRectCenter,
-			node.boundary.extents.X,
-			node.boundary.extents.Y, 0.0),
-		level:  nextLevel,
-		shapes: Shapes{},
+		tree:     node.tree,
+		parent:   node,
+		boundary: newAABB(southPoint, eastPoint),
+		level:    nextLevel,
+		shapes:   Shapes{},
 	}
 
 	node.southWest = &quadTreeNode{
-		tree:   node.tree,
-		parent: node,
-		boundary: NewRectangle(swRectCenter,
-			node.boundary.extents.X,
-			node.boundary.extents.Y, 0.0),
-		level:  nextLevel,
-		shapes: Shapes{},
+		tree:     node.tree,
+		parent:   node,
+		boundary: newAABB(node.boundary.min, center),
+		level:    nextLevel,
+		shapes:   Shapes{},
 	}
 
 	// Redistribute shapes between subnodes.

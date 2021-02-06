@@ -22,9 +22,7 @@ func (space *Space) Cells() map[*Rectangle]Shapes {
 	cells := map[*Rectangle]Shapes{}
 
 	for leaf := range space.tree.leaves {
-		boundary := leaf.boundary
-		cell := NewRectangle(boundary.center,
-			boundary.Width(), boundary.Height(), boundary.angle)
+		cell := leaf.boundary.toRectangle()
 
 		cells[cell] = leaf.shapes.Copy()
 	}
@@ -149,7 +147,7 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 	nodesToRemove := []*quadTreeNode{}
 
 	for _, node := range shape.nodes() {
-		if !ResolveCollision(node.boundary, shape, false) {
+		if !node.boundary.collidesShape(shape) {
 			nodesToRemove = append(nodesToRemove, node)
 		}
 	}
@@ -175,7 +173,7 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !ResolveCollision(node.boundary, shape, false) {
+		if !node.boundary.collidesShape(shape) {
 			continue
 		}
 
@@ -218,7 +216,7 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 	cells := map[Vector]Shapes{}
 
 	for _, node := range shape.nodes() {
-		cells[node.boundary.center] = node.shapes.Copy()
+		cells[node.boundary.center()] = node.shapes.Copy()
 	}
 
 	return cells, nil
@@ -323,7 +321,7 @@ func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff flo
 
 	// Add shapes from the previous nodes.
 	for _, area := range areas {
-		nodes[area.boundary.center] = area.shapes.Copy()
+		nodes[area.boundary.center()] = area.shapes.Copy()
 	}
 
 	// Search for collisions in the nodes
@@ -399,7 +397,7 @@ func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff 
 
 	// Add shapes from the previous nodes.
 	for _, area := range areas {
-		nodes[area.boundary.center] = area.shapes.Copy()
+		nodes[area.boundary.center()] = area.shapes.Copy()
 	}
 
 	// Search for collisions in the nodes
@@ -469,8 +467,8 @@ func NewSpace(subdivisionFactor, shapesInArea int, width, height float64, min, m
 	space.max = max
 	space.useTags = useTags
 	space.shapes = make(Shapes, 0)
-	tree, err := newQuadTree(NewRectangle(NewVector(0, 0), width, height, 0.0),
-		subdivisionFactor, shapesInArea)
+	tree, err := newQuadTree(newAABB(NewVector(-width/2.0, -height/2.0),
+		NewVector(width/2.0, height/2.0)), subdivisionFactor, shapesInArea)
 
 	if err != nil {
 		return nil, err

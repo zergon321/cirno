@@ -31,7 +31,7 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 	for nodeQueue.Len() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
-		if !IntersectionLineToRectangle(ray, node.boundary) {
+		if !node.boundary.collidesLine(ray) {
 			continue
 		}
 
@@ -78,7 +78,7 @@ func (space *Space) Boxcast(rect *Rectangle) Shapes {
 	for nodeQueue.Len() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
-		if !CollisionRectangleToRectangle(rect, node.boundary) {
+		if !node.boundary.collidesRectangle(rect) {
 			continue
 		}
 
@@ -104,7 +104,7 @@ func (space *Space) Circlecast(circle *Circle) Shapes {
 	for nodeQueue.Len() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
 
-		if !CollisionRectangleToCircle(node.boundary, circle) {
+		if !node.boundary.collidesCircle(circle) {
 			continue
 		}
 

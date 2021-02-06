@@ -19,13 +19,17 @@ type quadTree struct {
 // addLeaf adds the quad tree node in the list of quad tree leaves.
 func (tree *quadTree) addLeaf(node *quadTreeNode) error {
 	if tree.containsLeaf(node) {
+		center := node.boundary.center()
+
 		return fmt.Errorf("The leaf {%f, %f} already exists",
-			node.boundary.center.X, node.boundary.center.Y)
+			center.X, center.Y)
 	}
 
 	if node.northWest != nil {
+		center := node.boundary.center()
+
 		return fmt.Errorf("The node {%f, %f} cannot be a leaf",
-			node.boundary.center.X, node.boundary.center.Y)
+			center.X, center.Y)
 	}
 
 	tree.leaves[node] = none{}
@@ -37,8 +41,10 @@ func (tree *quadTree) addLeaf(node *quadTreeNode) error {
 // of quad tree leaves.
 func (tree *quadTree) removeLeaf(node *quadTreeNode) error {
 	if !tree.containsLeaf(node) {
+		center := node.boundary.center()
+
 		return fmt.Errorf("The leaf {%f, %f} doesn't exist",
-			node.boundary.center.X, node.boundary.center.Y)
+			center.X, center.Y)
 	}
 
 	delete(tree.leaves, node)
@@ -61,7 +67,7 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 		return nil, fmt.Errorf("The shape cannot be nil")
 	}
 
-	if !tree.root.boundary.ContainsPoint(shape.Center()) {
+	if !tree.root.boundary.containsPoint(shape.Center()) {
 		return nil, fmt.Errorf("The shape is out of bounds")
 	}
 
@@ -74,7 +80,7 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !ResolveCollision(node.boundary, shape, false) {
+		if !node.boundary.collidesShape(shape) {
 			continue
 		}
 
@@ -124,7 +130,7 @@ func (tree *quadTree) search(shape Shape) ([]*quadTreeNode, error) {
 		return nil, fmt.Errorf("The shape cannot be nil")
 	}
 
-	if !tree.root.boundary.ContainsPoint(shape.Center()) {
+	if !tree.root.boundary.containsPoint(shape.Center()) {
 		return nil, fmt.Errorf("The shape is out of bounds")
 	}
 
@@ -137,7 +143,7 @@ func (tree *quadTree) search(shape Shape) ([]*quadTreeNode, error) {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !ResolveCollision(node.boundary, shape, false) {
+		if !node.boundary.collidesShape(shape) {
 			continue
 		}
 
@@ -160,7 +166,7 @@ func (tree *quadTree) remove(shape Shape) error {
 		return fmt.Errorf("The shape cannot be nil")
 	}
 
-	if !tree.root.boundary.ContainsPoint(shape.Center()) {
+	if !tree.root.boundary.containsPoint(shape.Center()) {
 		return fmt.Errorf("The shape is out of bounds")
 	}
 
@@ -259,7 +265,7 @@ func (tree *quadTree) shapeGroups() map[*quadTreeNode]Shapes {
 }
 
 // newQuadTree creates a new empty quad tree.
-func newQuadTree(boundary *Rectangle, maxLevel, nodeCapacity int) (*quadTree, error) {
+func newQuadTree(boundary *aabb, maxLevel, nodeCapacity int) (*quadTree, error) {
 	if maxLevel < 1 {
 		return nil, fmt.Errorf("Max depth must be greater or equal to 1")
 	}
