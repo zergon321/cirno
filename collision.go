@@ -142,7 +142,10 @@ func IntersectionLineToLine(a, b *Line) bool {
 		return true
 	}
 
-	return boundingBoxesIntersect(aMin, aMax, bMin, bMax) &&
+	aBox := &aabb{min: aMin, max: aMax}
+	bBox := &aabb{min: bMin, max: bMax}
+
+	return aBox.collidesAABB(bBox) &&
 		a.touchesOrCrosses(b) && b.touchesOrCrosses(a)
 }
 

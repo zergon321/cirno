@@ -47,13 +47,6 @@ func SquaredDistance(a, b Vector) float64 {
 	return b.Subtract(a).SquaredMagnitude()
 }
 
-// boundingBoxesIntersect checks if 2 bounding boxes formed by the
-// given points do intersect.
-func boundingBoxesIntersect(a0, a1, b0, b1 Vector) bool {
-	return a0.X <= b1.X && a1.X >= b0.X && a0.Y <= b1.Y &&
-		a1.Y >= b0.Y
-}
-
 // Approximate attempts to move the shape in the specified direction
 // to detect the closest point until the shape collides other shapes.
 func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, intensity int, useTags bool) (Vector, float64, Shape, error) {
