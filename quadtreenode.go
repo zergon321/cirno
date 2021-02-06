@@ -1,7 +1,5 @@
 package cirno
 
-// TODO: use AABB instead of rectangle for boundary.
-
 // represents a single node in quad tree
 // for a certain subarea.
 type quadTreeNode struct {
