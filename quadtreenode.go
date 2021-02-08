@@ -16,13 +16,21 @@ type quadTreeNode struct {
 
 // add adds all the shapes covered by node area
 // in the set of node shapes.
-func (node *quadTreeNode) add(shapes Shapes) {
+func (node *quadTreeNode) add(shapes Shapes) error {
 	for shape := range shapes {
-		if node.boundary.collidesShape(shape) {
+		overlapped, err := node.boundary.collidesShape(shape)
+
+		if err != nil {
+			return err
+		}
+
+		if overlapped {
 			node.shapes.Insert(shape)
 			shape.addNodes(node)
 		}
 	}
+
+	return nil
 }
 
 // remove removes all the shapes from the set that
@@ -59,34 +67,58 @@ func (node *quadTreeNode) split() error {
 	eastPoint := NewVector(node.boundary.max.X, center.Y)
 
 	// Create new nodes.
+	northEastBoundary, err := newAABB(center, node.boundary.max)
+
+	if err != nil {
+		return err
+	}
+
 	node.northEast = &quadTreeNode{
 		tree:     node.tree,
 		parent:   node,
-		boundary: newAABB(center, node.boundary.max),
+		boundary: northEastBoundary,
 		level:    nextLevel,
 		shapes:   Shapes{},
+	}
+
+	northWestBoundary, err := newAABB(westPoint, northPoint)
+
+	if err != nil {
+		return err
 	}
 
 	node.northWest = &quadTreeNode{
 		tree:     node.tree,
 		parent:   node,
-		boundary: newAABB(westPoint, northPoint),
+		boundary: northWestBoundary,
 		level:    nextLevel,
 		shapes:   Shapes{},
+	}
+
+	southEastBoundary, err := newAABB(southPoint, eastPoint)
+
+	if err != nil {
+		return err
 	}
 
 	node.southEast = &quadTreeNode{
 		tree:     node.tree,
 		parent:   node,
-		boundary: newAABB(southPoint, eastPoint),
+		boundary: southEastBoundary,
 		level:    nextLevel,
 		shapes:   Shapes{},
+	}
+
+	southWestBoundary, err := newAABB(node.boundary.min, center)
+
+	if err != nil {
+		return err
 	}
 
 	node.southWest = &quadTreeNode{
 		tree:     node.tree,
 		parent:   node,
-		boundary: newAABB(node.boundary.min, center),
+		boundary: southWestBoundary,
 		level:    nextLevel,
 		shapes:   Shapes{},
 	}
@@ -99,7 +131,7 @@ func (node *quadTreeNode) split() error {
 	node.clear()
 
 	// Remove the current node from tree leaves.
-	err := node.tree.removeLeaf(node)
+	err = node.tree.removeLeaf(node)
 
 	if err != nil {
 		return err

@@ -1,22 +1,31 @@
 package cirno
 
 import (
+	"fmt"
+
 	"github.com/golang-collections/collections/queue"
 )
-
-// ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0, если
-// обе компоненты вектора направления луча равны 0.
 
 // Raycast casts a ray in the space and returns the hit shape closest
 // to the origin of the ray.
 //
 // Ray cannot hit against the shape within which it's located.
-func (space *Space) Raycast(origin Vector, direction Vector, distance float64, mask int32) (Shape, Vector) {
+func (space *Space) Raycast(origin Vector, direction Vector, distance float64, mask int32) (Shape, Vector, error) {
+	if Sign(direction.X) == 0 && Sign(direction.Y) == 0 {
+		return nil, Zero, fmt.Errorf("the direction vector is zero")
+	}
+
 	if distance <= 0 {
 		distance = Distance(space.min, space.max)
 	}
 
-	ray := NewLine(origin, origin.Add(direction.Normalize().MultiplyByScalar(distance)))
+	ray, err := NewLine(origin, origin.Add(
+		direction.Normalize().MultiplyByScalar(distance)))
+
+	if err != nil {
+		return nil, Zero, err
+	}
+
 	ray.SetMask(mask)
 	nodeQueue := queue.New()
 	nodeQueue.Enqueue(space.tree.root)
@@ -30,16 +39,32 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 
 	for nodeQueue.Len() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
+		overlapped, err := node.boundary.collidesLine(ray)
 
-		if !node.boundary.collidesLine(ray) {
+		if err != nil {
+			return nil, Zero, err
+		}
+
+		if !overlapped {
 			continue
 		}
 
 		// If the node is a leaf.
 		if node.northWest == nil {
 			for shape := range node.shapes {
-				if ResolveCollision(ray, shape, space.useTags) && !shape.ContainsPoint(ray.p) {
-					contacts := Contact(ray, shape)
+				raycastHit, err := ResolveCollision(ray, shape, space.useTags)
+
+				if err != nil {
+					return nil, Zero, err
+				}
+
+				if raycastHit && !shape.ContainsPoint(ray.p) {
+					contacts, err := Contact(ray, shape)
+
+					if err != nil {
+						return nil, Zero, err
+					}
+
 					for _, contact := range contacts {
 						sqrDistance := SquaredDistance(ray.p, contact)
 
@@ -65,57 +90,79 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 		}
 	}
 
-	return hitShape, hit
+	return hitShape, hit, nil
 }
 
 // Boxcast casts a box in the space and returns all the
 // shapes overlapped by this box.
-func (space *Space) Boxcast(rect *Rectangle) Shapes {
+func (space *Space) Boxcast(rect *Rectangle) (Shapes, error) {
 	nodeQueue := queue.New()
 	nodeQueue.Enqueue(space.tree.root)
 	shapes := make(Shapes, 0)
 
 	for nodeQueue.Len() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
+		overlapped, err := node.boundary.collidesRectangle(rect)
 
-		if !node.boundary.collidesRectangle(rect) {
+		if err != nil {
+			return nil, err
+		}
+
+		if !overlapped {
 			continue
 		}
 
 		if node.northWest == nil {
 			for shape := range node.shapes {
-				if ResolveCollision(rect, shape, space.useTags) {
+				boxcastHit, err := ResolveCollision(rect, shape, space.useTags)
+
+				if err != nil {
+					return nil, err
+				}
+
+				if boxcastHit {
 					shapes.Insert(shape)
 				}
 			}
 		}
 	}
 
-	return shapes
+	return shapes, nil
 }
 
 // Circlecast casts a circle in the space and returns all the
 // shapes overlapped by the circle.
-func (space *Space) Circlecast(circle *Circle) Shapes {
+func (space *Space) Circlecast(circle *Circle) (Shapes, error) {
 	nodeQueue := queue.New()
 	nodeQueue.Enqueue(space.tree.root)
 	shapes := make(Shapes, 0)
 
 	for nodeQueue.Len() > 0 {
 		node := nodeQueue.Dequeue().(*quadTreeNode)
+		overlapped, err := node.boundary.collidesCircle(circle)
 
-		if !node.boundary.collidesCircle(circle) {
+		if err != nil {
+			return nil, err
+		}
+
+		if !overlapped {
 			continue
 		}
 
 		if node.northWest == nil {
 			for shape := range node.shapes {
-				if ResolveCollision(circle, shape, space.useTags) {
+				circlecastHit, err := ResolveCollision(circle, shape, space.useTags)
+
+				if err != nil {
+					return nil, err
+				}
+
+				if circlecastHit {
 					shapes.Insert(shape)
 				}
 			}
 		}
 	}
 
-	return shapes
+	return shapes, nil
 }

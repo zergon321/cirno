@@ -1,17 +1,23 @@
 package cirno
 
 import (
+	"fmt"
 	"math"
 )
 
-// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
-// не происходит проверка аргумента на nil (пустой указатель).
-
 // ResolveCollision assumes types of the given shapes
 // and detects if they collide.
-func ResolveCollision(one, another Shape, useTags bool) bool {
+func ResolveCollision(one, another Shape, useTags bool) (bool, error) {
+	if one == nil {
+		return false, fmt.Errorf("the first shape is nil")
+	}
+
+	if another == nil {
+		return false, fmt.Errorf("the second shape is nil")
+	}
+
 	if useTags && !one.ShouldCollide(another) {
-		return false
+		return false, nil
 	}
 
 	id := one.TypeName() + "_" + another.TypeName()
@@ -45,12 +51,22 @@ func ResolveCollision(one, another Shape, useTags bool) bool {
 		return IntersectionLineToRectangle(another.(*Line), one.(*Rectangle))
 	}
 
-	return false
+	return false, fmt.Errorf(
+		"unknown shape type combination: '%s' and '%s'",
+		one.TypeName(), another.TypeName())
 }
 
 // CollisionRectangleToRectangle detects if there is an intersection
 // between two oriented rectangles.
-func CollisionRectangleToRectangle(a, b *Rectangle) bool {
+func CollisionRectangleToRectangle(a, b *Rectangle) (bool, error) {
+	if a == nil {
+		return false, fmt.Errorf("the first rectangle is nil")
+	}
+
+	if b == nil {
+		return false, fmt.Errorf("the second rectangle is nil")
+	}
+
 	// A vector from the center of rectangle A to the center of rectangle B.
 	t := b.center.Subtract(a.center)
 
@@ -76,24 +92,35 @@ func CollisionRectangleToRectangle(a, b *Rectangle) bool {
 
 	// If the separating axis exists.
 	if sepAx || sepAy || sepBx || sepBy {
-		return false
+		return false, nil
 	}
 
 	// If the separating axis doesn't exist, the rectangles intersect.
-	return true
+	return true, nil
 }
 
 // TODO: use AABB.
 
 // CollisionRectangleToCircle detects if there's an intersection between
 // an oriented rectangle and a circle.
-func CollisionRectangleToCircle(rect *Rectangle, circle *Circle) bool {
+func CollisionRectangleToCircle(rect *Rectangle, circle *Circle) (bool, error) {
+	if rect == nil {
+		return false, fmt.Errorf("the rectangle is nil")
+	}
+
+	if circle == nil {
+		return false, fmt.Errorf("the circle is nil")
+	}
+
 	// Transform the circle center coordinates from the world space
 	// to the rectangle's local space.
 	t := circle.center.Subtract(rect.center)
 	theta := -rect.angle
 	t = t.Rotate(theta)
-	localCircle := NewCircle(t, circle.radius)
+	localCircle := &Circle{
+		center: t,
+		radius: circle.radius,
+	}
 	localRect := &Rectangle{
 		center:  NewVector(0, 0),
 		extents: NewVector(rect.Width()/2, rect.Height()/2),
@@ -118,58 +145,98 @@ func CollisionRectangleToCircle(rect *Rectangle, circle *Circle) bool {
 
 	// If the closest point is inside the circle,
 	// the rectangle and the circle do intersect.
-	return localCircle.ContainsPoint(closestPoint)
+	return localCircle.ContainsPoint(closestPoint), nil
 }
 
 // CollisionCircleToCircle detects if there's an intersection
 // between two circles.
-func CollisionCircleToCircle(a, b *Circle) bool {
+func CollisionCircleToCircle(a, b *Circle) (bool, error) {
+	if a == nil {
+		return false, fmt.Errorf("the first circle is nil")
+	}
+
+	if b == nil {
+		return false, fmt.Errorf("the second circle is nil")
+	}
+
 	t := a.center.Subtract(b.center)
 	radiiSum := a.radius + b.radius
 
-	return t.SquaredMagnitude() <= radiiSum*radiiSum
+	return t.SquaredMagnitude() <= radiiSum*radiiSum, nil
 }
 
 // IntersectionLineToLine detects if two lines
 // intersect.
-func IntersectionLineToLine(a, b *Line) bool {
+func IntersectionLineToLine(a, b *Line) (bool, error) {
+	if a == nil {
+		return false, fmt.Errorf("the first line is nil")
+	}
+
+	if b == nil {
+		return false, fmt.Errorf("the second line is nil")
+	}
+
 	aMin, aMax := a.GetBoundingBox()
 	bMin, bMax := b.GetBoundingBox()
 
 	// If one line fully contains another.
 	if a.ContainsPoint(b.p) && a.ContainsPoint(b.q) ||
 		b.ContainsPoint(a.p) && b.ContainsPoint(a.q) {
-		return true
+		return true, nil
 	}
 
 	aBox := &aabb{min: aMin, max: aMax}
 	bBox := &aabb{min: bMin, max: bMax}
+	overlap, err := aBox.collidesAABB(bBox)
 
-	return aBox.collidesAABB(bBox) &&
-		a.touchesOrCrosses(b) && b.touchesOrCrosses(a)
+	if err != nil {
+		return false, err
+	}
+
+	aTouchesB, err := a.touchesOrCrosses(b)
+	bTouchesA, err := b.touchesOrCrosses(a)
+
+	return overlap &&
+		aTouchesB && bTouchesA, nil
 }
 
 // IntersectionLineToCircle detects if a line and a circle do intersect.
-func IntersectionLineToCircle(line *Line, circle *Circle) bool {
+func IntersectionLineToCircle(line *Line, circle *Circle) (bool, error) {
+	if line == nil {
+		return false, fmt.Errorf("the line is nil")
+	}
+
+	if circle == nil {
+		return false, fmt.Errorf("the circle is nil")
+	}
+
 	if circle.ContainsPoint(line.p) || circle.ContainsPoint(line.q) {
-		return true
+		return true, nil
 	}
 
 	pq := line.q.Subtract(line.p)
 	t := Dot(circle.center.Subtract(line.p), pq) / Dot(pq, pq)
 
 	if t < 0.0 || t > 1.0 {
-		return false
+		return false, nil
 	}
 
 	closestPoint := line.p.Add(pq.MultiplyByScalar(t))
 
-	return SquaredDistance(circle.center, closestPoint) <= circle.radius*circle.radius
+	return SquaredDistance(circle.center, closestPoint) <= circle.radius*circle.radius, nil
 }
 
 // IntersectionLineToRectangle detects if there's an intersection between
 // a line and a rectangle.
-func IntersectionLineToRectangle(line *Line, rect *Rectangle) bool {
+func IntersectionLineToRectangle(line *Line, rect *Rectangle) (bool, error) {
+	if line == nil {
+		return false, fmt.Errorf("the line is nil")
+	}
+
+	if rect == nil {
+		return false, fmt.Errorf("the rectangle is nil")
+	}
+
 	// The method for two rectangles is as well appropriate
 	// for line and rectangle because line segment is just
 	// a rectangle with no Y extent.
@@ -190,8 +257,8 @@ func IntersectionLineToRectangle(line *Line, rect *Rectangle) bool {
 			math.Abs(Dot(rect.yAxis.MultiplyByScalar(rect.extents.Y), lineAxisY))
 
 	if sepAx || sepAy || sepLineX || sepLineY {
-		return false
+		return false, nil
 	}
 
-	return true
+	return true, nil
 }

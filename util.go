@@ -50,10 +50,21 @@ func SquaredDistance(a, b Vector) float64 {
 // Approximate attempts to move the shape in the specified direction
 // to detect the closest point until the shape collides other shapes.
 func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, intensity int, useTags bool) (Vector, float64, Shape, error) {
+	if shape == nil {
+		return Zero, -1, nil,
+			fmt.Errorf("the shape being approximated is nil")
+	}
+
+	if shape == nil {
+		return Zero, -1, nil,
+			fmt.Errorf("the set of shapes is nil")
+	}
+
 	var foundShape Shape
 
 	if intensity < 0 {
-		return Zero, 0, nil, fmt.Errorf("The value of intensity must be non-zero")
+		return Zero, 0, nil,
+			fmt.Errorf("the value of intensity must be positive")
 	}
 
 	step := 1.0 / float64(intensity)
@@ -78,8 +89,13 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 			if id == "Line_Line" {
 				line := shape.(*Line)
 				otherLine := other.(*Line)
+				linesCollinear, err := line.CollinearTo(otherLine)
 
-				if line.CollinearTo(otherLine) {
+				if intensity < 0 {
+					return Zero, 0, nil, err
+				}
+
+				if linesCollinear {
 					// Compare line tags.
 					if useTags && !line.ShouldCollide(otherLine) {
 						continue
@@ -88,8 +104,14 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 					// Vice versa.
 					movement := currentPos.Subtract(prevPos)
 					turn := currentAngle - prevAngle
+					linesWouldIntersect, err := linesWouldCollide(
+						prevPos, prevAngle, movement, turn, line, otherLine)
 
-					if linesWouldCollide(prevPos, prevAngle, movement, turn, line, otherLine) {
+					if err != nil {
+						return Zero, -1, nil, err
+					}
+
+					if linesWouldIntersect {
 						collisionFound = true
 						foundShape = otherLine
 
@@ -98,7 +120,13 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 				}
 			}
 
-			if ResolveCollision(shape, other, useTags) {
+			overlapped, err := ResolveCollision(shape, other, useTags)
+
+			if err != nil {
+				return Zero, -1, nil, err
+			}
+
+			if overlapped {
 				collisionFound = true
 				foundShape = other
 
@@ -118,7 +146,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 	shape.SetAngle(originalAngle)
 
 	if math.IsNaN(prevPos.X) || math.IsNaN(prevPos.Y) {
-		return Zero, 0.0, nil, fmt.Errorf("Couldn't approximate the shape")
+		return Zero, 0.0, nil, fmt.Errorf("couldn't approximate the shape")
 	}
 
 	return prevPos, prevAngle, foundShape, nil
@@ -147,7 +175,15 @@ func AdjustAngle(angle float64) float64 {
 
 // linesWouldCollide returns true if the first line moved in the specified
 // direction from its original position would collide the second line on the way.
-func linesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vector, turnDiff float64, line, otherLine *Line) bool {
+func linesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vector, turnDiff float64, line, otherLine *Line) (bool, error) {
+	if line == nil {
+		return false, fmt.Errorf("the first line is nil")
+	}
+
+	if otherLine == nil {
+		return false, fmt.Errorf("the second line is nil")
+	}
+
 	tmpPos := line.Center()
 	tmpAngle := line.Angle()
 	line.SetPosition(originalPos)
@@ -164,24 +200,73 @@ func linesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vecto
 	otherLine.SetPosition(otherTmpPos)
 	otherLine.SetAngle(otherTmpAngle)
 
-	pp := NewLine(movedP, otherLine.p)
-	qq := NewLine(movedQ, otherLine.q)
+	pp, err := NewLine(movedP, otherLine.p)
 
-	if IntersectionLineToLine(pp, line) ||
-		IntersectionLineToLine(qq, line) {
-		return true
+	if err != nil {
+		return false, err
+	}
+
+	qq, err := NewLine(movedQ, otherLine.q)
+
+	if err != nil {
+		return false, err
+	}
+
+	ppIntersects, err := IntersectionLineToLine(pp, line)
+
+	if err != nil {
+		return false, err
+	}
+
+	qqIntersects, err := IntersectionLineToLine(qq, line)
+
+	if err != nil {
+		return false, err
+	}
+
+	if ppIntersects ||
+		qqIntersects {
+		return true, nil
 	}
 
 	line.SetPosition(tmpPos)
 	line.SetAngle(tmpAngle)
-	pp = NewLine(origP, line.p)
-	qq = NewLine(origQ, line.q)
 
-	if IntersectionLineToLine(pp, otherLine) ||
-		IntersectionLineToLine(qq, otherLine) ||
-		IntersectionLineToLine(line, otherLine) {
-		return true
+	pp, err = NewLine(origP, line.p)
+
+	if err != nil {
+		return false, err
 	}
 
-	return false
+	qq, err = NewLine(origQ, line.q)
+
+	if err != nil {
+		return false, err
+	}
+
+	ppIntersects, err = IntersectionLineToLine(pp, otherLine)
+
+	if err != nil {
+		return false, err
+	}
+
+	qqIntersects, err = IntersectionLineToLine(qq, otherLine)
+
+	if err != nil {
+		return false, err
+	}
+
+	linesIntersect, err := IntersectionLineToLine(line, otherLine)
+
+	if err != nil {
+		return false, err
+	}
+
+	if ppIntersects ||
+		qqIntersects ||
+		linesIntersect {
+		return true, nil
+	}
+
+	return false, nil
 }

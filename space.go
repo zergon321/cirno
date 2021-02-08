@@ -51,17 +51,25 @@ func (space *Space) UseTags() bool {
 
 // InBounds detects if the center the given shape
 // is within the space bounds.
-func (space *Space) InBounds(shape Shape) bool {
+func (space *Space) InBounds(shape Shape) (bool, error) {
+	if shape == nil {
+		return false, fmt.Errorf("the shape is nil")
+	}
+
 	pos := shape.Center()
 
 	return pos.X >= space.min.X ||
 		pos.Y >= space.min.Y || pos.X <= space.max.X ||
-		pos.Y <= space.max.Y
+		pos.Y <= space.max.Y, nil
 }
 
 // AdjustShapePosition changes the position of the shape
 // if it's out of bounds.
-func (space *Space) AdjustShapePosition(shape Shape) {
+func (space *Space) AdjustShapePosition(shape Shape) error {
+	if shape == nil {
+		return fmt.Errorf("the shape is nil")
+	}
+
 	pos := shape.Center()
 
 	if pos.X < space.min.X {
@@ -79,18 +87,26 @@ func (space *Space) AdjustShapePosition(shape Shape) {
 	if pos.Y > space.max.Y {
 		pos = shape.SetPosition(NewVector(pos.X, space.max.Y))
 	}
+
+	return nil
 }
 
 // Add adds a new shape in the space.
 func (space *Space) Add(shapes ...Shape) error {
 	for _, shape := range shapes {
 		if shape != nil {
-			if !space.InBounds(shape) {
-				return fmt.Errorf("The shape is out of bounds")
+			inBounds, err := space.InBounds(shape)
+
+			if err != nil {
+				return err
+			}
+
+			if !inBounds {
+				return fmt.Errorf("the shape is out of bounds")
 			}
 
 			space.shapes.Insert(shape)
-			_, err := space.tree.insert(shape)
+			_, err = space.tree.insert(shape)
 
 			if err != nil {
 				return err
@@ -117,7 +133,11 @@ func (space *Space) Remove(shapes ...Shape) error {
 
 // Contains returns true if the shape is within the space,
 // and false otherwise.
-func (space *Space) Contains(shape Shape) bool {
+func (space *Space) Contains(shape Shape) (bool, error) {
+	if shape == nil {
+		return false, fmt.Errorf("the shape is nil")
+	}
+
 	return space.shapes.Contains(shape)
 }
 
@@ -138,8 +158,18 @@ func (space *Space) Shapes() Shapes {
 // Update should be called on the shape
 // whenever it's moved within the space.
 func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
-	if !space.Contains(shape) {
-		return nil, fmt.Errorf("The space doesn't contain the given shape")
+	if shape == nil {
+		return nil, fmt.Errorf("the shape is nil")
+	}
+
+	contains, err := space.Contains(shape)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !contains {
+		return nil, fmt.Errorf("the space doesn't contain the given shape")
 	}
 
 	// Remove the shape from all the nodes that don't contain it
@@ -147,7 +177,13 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 	nodesToRemove := []*quadTreeNode{}
 
 	for _, node := range shape.nodes() {
-		if !node.boundary.collidesShape(shape) {
+		overlapped, err := node.boundary.collidesShape(shape)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if !overlapped {
 			nodesToRemove = append(nodesToRemove, node)
 		}
 	}
@@ -173,7 +209,13 @@ func (space *Space) Update(shape Shape) (map[Vector]Shapes, error) {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !node.boundary.collidesShape(shape) {
+		overlapped, err := node.boundary.collidesShape(shape)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if !overlapped {
 			continue
 		}
 
@@ -244,7 +286,13 @@ func (space *Space) CollidingShapes() (map[Shape]Shapes, error) {
 			}
 
 			for _, otherShape := range shapes[i+1:] {
-				if ResolveCollision(shape, otherShape, space.useTags) {
+				overlapped, err := ResolveCollision(shape, otherShape, space.useTags)
+
+				if err != nil {
+					return nil, err
+				}
+
+				if overlapped {
 					collidingShapes[shape].Insert(otherShape)
 
 					if _, ok := collidingShapes[otherShape]; !ok {
@@ -271,7 +319,13 @@ func (space *Space) CollidingWith(shape Shape) (Shapes, error) {
 
 	for _, area := range nodes {
 		for item := range area.shapes {
-			if item != shape && ResolveCollision(item, shape, space.useTags) {
+			overlapped, err := ResolveCollision(item, shape, space.useTags)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if item != shape && overlapped {
 				shapes.Insert(item)
 			}
 		}
@@ -287,7 +341,13 @@ func (space *Space) CollidedBy(shape Shape) (Shapes, error) {
 
 	for _, area := range nodes {
 		for item := range area.shapes {
-			if item != shape && ResolveCollision(shape, item, space.useTags) {
+			overlapped, err := ResolveCollision(shape, item, space.useTags)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if item != shape && overlapped {
 				shapes.Insert(item)
 			}
 		}
@@ -339,14 +399,26 @@ func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff flo
 			if id == "Line_Line" {
 				lineShape := shape.(*Line)
 				lineItem := item.(*Line)
+				linesCollinear, err := lineShape.CollinearTo(lineItem)
 
-				if lineShape.CollinearTo(lineItem) {
+				if err != nil {
+					return nil, err
+				}
+
+				if linesCollinear {
 					// Check line tags.
 					if space.useTags && !lineShape.ShouldCollide(lineItem) {
 						continue
 					}
 
-					if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
+					linesWouldIntersect, err := linesWouldCollide(originalPos,
+						originalAngle, moveDiff, turnDiff, lineShape, lineItem)
+
+					if err != nil {
+						return nil, err
+					}
+
+					if linesWouldIntersect {
 						shapes.Insert(lineItem)
 
 						continue
@@ -354,7 +426,14 @@ func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff flo
 				}
 			}
 
-			if ResolveCollision(shape, item, space.useTags) {
+			overlapped, err := ResolveCollision(shape,
+				item, space.useTags)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if overlapped {
 				shapes.Insert(item)
 			}
 		}
@@ -415,14 +494,26 @@ func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff 
 			if id == "Line_Line" {
 				lineShape := shape.(*Line)
 				lineItem := item.(*Line)
+				linesCollinear, err := lineShape.CollinearTo(lineItem)
 
-				if lineShape.CollinearTo(lineItem) {
+				if err != nil {
+					return nil, err
+				}
+
+				if linesCollinear {
 					// Check line tags.
 					if space.useTags && !lineItem.ShouldCollide(lineShape) {
 						continue
 					}
 
-					if linesWouldCollide(originalPos, originalAngle, moveDiff, turnDiff, lineShape, lineItem) {
+					linesWouldIntersect, err := linesWouldCollide(originalPos,
+						originalAngle, moveDiff, turnDiff, lineShape, lineItem)
+
+					if err != nil {
+						return nil, err
+					}
+
+					if linesWouldIntersect {
 						shapes.Insert(lineItem)
 
 						continue
@@ -430,7 +521,14 @@ func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff 
 				}
 			}
 
-			if ResolveCollision(item, shape, space.useTags) {
+			overlapped, err := ResolveCollision(item,
+				shape, space.useTags)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if overlapped {
 				shapes.Insert(item)
 			}
 		}
@@ -449,17 +547,25 @@ func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff 
 }
 
 // NewSpace creates a new empty space with the given parameters.
-func NewSpace(subdivisionFactor, shapesInArea int, width, height float64, min, max Vector, useTags bool) (*Space, error) {
+func NewSpace(
+	subdivisionFactor, shapesInArea int, width,
+	height float64, min, max Vector, useTags bool,
+) (
+	*Space, error,
+) {
 	if width <= 0 || height <= 0 {
-		return nil, fmt.Errorf("Space must have positive values for width and height")
+		return nil, fmt.Errorf(
+			"Space must have positive values for width and height")
 	}
 
 	if min.X >= max.X {
-		return nil, fmt.Errorf("The value of min X is incorrect")
+		return nil, fmt.Errorf(
+			"The value of min X is incorrect")
 	}
 
 	if min.Y >= max.Y {
-		return nil, fmt.Errorf("The value of min Y is incorrect")
+		return nil, fmt.Errorf(
+			"The value of min Y is incorrect")
 	}
 
 	space := new(Space)
@@ -467,8 +573,16 @@ func NewSpace(subdivisionFactor, shapesInArea int, width, height float64, min, m
 	space.max = max
 	space.useTags = useTags
 	space.shapes = make(Shapes, 0)
-	tree, err := newQuadTree(newAABB(NewVector(-width/2.0, -height/2.0),
-		NewVector(width/2.0, height/2.0)), subdivisionFactor, shapesInArea)
+	boundary, err := newAABB(NewVector(
+		-width/2.0, -height/2.0),
+		NewVector(width/2.0, height/2.0))
+
+	if err != nil {
+		return nil, err
+	}
+
+	tree, err := newQuadTree(boundary,
+		subdivisionFactor, shapesInArea)
 
 	if err != nil {
 		return nil, err

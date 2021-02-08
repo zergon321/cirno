@@ -1,5 +1,7 @@
 package cirno
 
+import "fmt"
+
 // Rectangle represents an oriented euclidian rectangle.
 type Rectangle struct {
 	center  Vector
@@ -48,12 +50,14 @@ func (r *Rectangle) SetAngleRadians(angle float64) float64 {
 	return r.RotateRadians(angle - r.angle)
 }
 
+// TODO: use AABB.
+
 // ContainsPoint detects if the given point is inside the rectangle.
 func (r *Rectangle) ContainsPoint(point Vector) bool {
 	localPoint := point.Subtract(r.center)
 	theta := -r.angle
 	localPoint = localPoint.Rotate(theta)
-	localRect := NewRectangle(NewVector(0, 0), r.Width(), r.Height(), 0.0)
+	localRect, _ := NewRectangle(NewVector(0, 0), r.Width(), r.Height(), 0.0)
 	min := localRect.Min()
 	max := localRect.Max()
 
@@ -146,7 +150,17 @@ func (r *Rectangle) Vertices() [4]Vector {
 }
 
 // NewRectangle returns a new rectangle with specified parameters.
-func NewRectangle(position Vector, width, height, angle float64) *Rectangle {
+func NewRectangle(position Vector, width, height, angle float64) (*Rectangle, error) {
+	if width <= 0.0 {
+		return nil, fmt.Errorf(
+			"the length of the rectangle must be positive")
+	}
+
+	if height <= 0.0 {
+		return nil, fmt.Errorf(
+			"the height of the rectangle must be positive")
+	}
+
 	rect := &Rectangle{}
 
 	rect.center = position
@@ -156,5 +170,5 @@ func NewRectangle(position Vector, width, height, angle float64) *Rectangle {
 	rect.Rotate(angle)
 	rect.treeNodes = []*quadTreeNode{}
 
-	return rect
+	return rect, nil
 }

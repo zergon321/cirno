@@ -1,5 +1,9 @@
 package cirno
 
+import (
+	"fmt"
+)
+
 // aabb is an axis-aligned bounding box,
 // a rectangle which has no orientation
 // and whose edges are aligned with X and Y axes.
@@ -48,7 +52,7 @@ func (bb *aabb) containsPoint(point Vector) bool {
 
 // collidesShape returns true if the AABB
 // overlaps the given shape, and false otherwise.
-func (bb *aabb) collidesShape(shape Shape) bool {
+func (bb *aabb) collidesShape(shape Shape) (bool, error) {
 	switch other := shape.(type) {
 	case *Rectangle:
 		return bb.collidesRectangle(other)
@@ -60,22 +64,26 @@ func (bb *aabb) collidesShape(shape Shape) bool {
 		return bb.collidesLine(other)
 
 	default:
-		return false
+		return false, fmt.Errorf("shape type is unknown")
 	}
 }
 
 // collidesAABB returns true if the given AABB
 // overlaps another AABB, and false otherwise.
-func (bb *aabb) collidesAABB(other *aabb) bool {
+func (bb *aabb) collidesAABB(other *aabb) (bool, error) {
+	if other == nil {
+		return false, fmt.Errorf("the other AABB is nil")
+	}
+
 	return bb.min.X <= other.max.X &&
 		bb.max.X >= other.min.X &&
 		bb.min.Y <= other.max.Y &&
-		bb.max.Y >= other.min.Y
+		bb.max.Y >= other.min.Y, nil
 }
 
 // collidesRectangle returns true if the given AABB
 // overlaps the given rectangle, and false otherwise.
-func (bb *aabb) collidesRectangle(rect *Rectangle) bool {
+func (bb *aabb) collidesRectangle(rect *Rectangle) (bool, error) {
 	bbRect := &Rectangle{
 		center: bb.center(),
 		extents: NewVector((bb.max.X-bb.min.X)/2.0,
@@ -90,7 +98,11 @@ func (bb *aabb) collidesRectangle(rect *Rectangle) bool {
 
 // collidesLine returns true if the given AABB
 // overlaps the given line, and false otherwise.
-func (bb *aabb) collidesLine(line *Line) bool {
+func (bb *aabb) collidesLine(line *Line) (bool, error) {
+	if line == nil {
+		return false, fmt.Errorf("the line is nil")
+	}
+
 	vertices := bb.vertices()
 	ab := &Line{
 		p:     vertices[0],
@@ -115,18 +127,46 @@ func (bb *aabb) collidesLine(line *Line) bool {
 
 	if bb.containsPoint(line.p) ||
 		bb.containsPoint(line.q) {
-		return true
+		return true, nil
 	}
 
-	return IntersectionLineToLine(ab, line) ||
-		IntersectionLineToLine(bc, line) ||
-		IntersectionLineToLine(cd, line) ||
-		IntersectionLineToLine(ad, line)
+	abIntersects, err := IntersectionLineToLine(ab, line)
+
+	if err != nil {
+		return false, err
+	}
+
+	bcIntersects, err := IntersectionLineToLine(bc, line)
+
+	if err != nil {
+		return false, err
+	}
+
+	cdIntersects, err := IntersectionLineToLine(cd, line)
+
+	if err != nil {
+		return false, err
+	}
+
+	adIntersects, err := IntersectionLineToLine(ad, line)
+
+	if err != nil {
+		return false, err
+	}
+
+	return abIntersects ||
+		bcIntersects ||
+		cdIntersects ||
+		adIntersects, nil
 }
 
 // collidesCircle returns true if the AABB collides
 // the given circle, and false otherwise.
-func (bb *aabb) collidesCircle(circle *Circle) bool {
+func (bb *aabb) collidesCircle(circle *Circle) (bool, error) {
+	if circle == nil {
+		return false, fmt.Errorf("the circle is nil")
+	}
+
 	closestPoint := circle.center
 
 	// Find the point of the rectangle which is closest to
@@ -145,13 +185,18 @@ func (bb *aabb) collidesCircle(circle *Circle) bool {
 
 	// If the closest point is inside the circle,
 	// the rectangle and the circle do intersect.
-	return circle.ContainsPoint(closestPoint)
+	return circle.ContainsPoint(closestPoint), nil
 }
 
 // newAABB creates a new AABB out of min and max points.
-func newAABB(min, max Vector) *aabb {
+func newAABB(min, max Vector) (*aabb, error) {
+	if min.X >= max.X || min.Y >= max.Y {
+		return nil, fmt.Errorf(
+			"invalid points specified for AABB")
+	}
+
 	return &aabb{
 		min: min,
 		max: max,
-	}
+	}, nil
 }

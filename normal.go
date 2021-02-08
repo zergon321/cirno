@@ -72,9 +72,16 @@ func (circle *Circle) NormalToRectangle(rect *Rectangle) Vector {
 	t := circle.center.Subtract(rect.center)
 	theta := -rect.angle
 	t = t.Rotate(theta)
-	localCircle := NewCircle(t, circle.radius)
-	localRect := NewRectangle(NewVector(0, 0), rect.Width(),
-		rect.Height(), 0.0)
+	localCircle := &Circle{
+		center: t,
+		radius: circle.radius,
+	}
+	localRect := &Rectangle{
+		center:  NewVector(0, 0),
+		extents: NewVector(rect.Width()/2, rect.Height()/2),
+		xAxis:   NewVector(1, 0),
+		yAxis:   NewVector(0, 1),
+	}
 	closestPoint := localCircle.center
 
 	// Find the point of the rectangle which is closest to

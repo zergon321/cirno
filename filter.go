@@ -1,5 +1,8 @@
 package cirno
 
+// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
+// не происходит проверка аргумента на nil (пустой указатель).
+
 // FilterByIdentity returns all the shapes
 // matching the specified identity template.
 func (shapes Shapes) FilterByIdentity(identity int32) Shapes {

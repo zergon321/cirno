@@ -1,8 +1,8 @@
 package cirno
 
 import (
+	"fmt"
 	"math"
-	"reflect"
 )
 
 // ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
@@ -10,10 +10,16 @@ import (
 
 // Contact returns the contact points between two given shapes
 // (if they exist).
-func Contact(one, other Shape) []Vector {
-	oneType := reflect.TypeOf(one).Elem()
-	otherType := reflect.TypeOf(other).Elem()
-	id := oneType.Name() + "_" + otherType.Name()
+func Contact(one, other Shape) ([]Vector, error) {
+	if one == nil {
+		return nil, fmt.Errorf("the first shape is nil")
+	}
+
+	if other == nil {
+		return nil, fmt.Errorf("the second shape is nil")
+	}
+
+	id := one.TypeName() + "_" + other.TypeName()
 
 	switch id {
 	case "Rectangle_Rectangle":
@@ -44,12 +50,22 @@ func Contact(one, other Shape) []Vector {
 		return ContactLineToRectangle(other.(*Line), one.(*Rectangle))
 	}
 
-	return []Vector{}
+	return nil, fmt.Errorf(
+		"unknown shape type combination: '%s' and '%s'",
+		one.TypeName(), other.TypeName())
 }
 
 // ContactLineToCircle returns the contact points between the
 // line and the circle (if they exist).
-func ContactLineToCircle(line *Line, circle *Circle) []Vector {
+func ContactLineToCircle(line *Line, circle *Circle) ([]Vector, error) {
+	if line == nil {
+		return nil, fmt.Errorf("the line is nil")
+	}
+
+	if circle == nil {
+		return nil, fmt.Errorf("the circle is nil")
+	}
+
 	ax := math.Pow(line.p.X-line.q.X, 2)
 	ay := math.Pow(line.p.Y-line.q.Y, 2)
 
@@ -68,7 +84,7 @@ func ContactLineToCircle(line *Line, circle *Circle) []Vector {
 	// If there is no intersection between the line and
 	// the circle.
 	if d < 0.0 {
-		return []Vector{}
+		return []Vector{}, nil
 	} else if d < Epsilon {
 		// There is probably one point of intersection.
 		t := -b / (2 * a)
@@ -80,10 +96,10 @@ func ContactLineToCircle(line *Line, circle *Circle) []Vector {
 				Y: t*line.p.Y + (1-t)*line.q.Y,
 			}
 
-			return []Vector{contact}
+			return []Vector{contact}, nil
 		}
 
-		return []Vector{}
+		return []Vector{}, nil
 	} else {
 		// There is probably two points of intersection.
 		contacts := make([]Vector, 0)
@@ -110,13 +126,21 @@ func ContactLineToCircle(line *Line, circle *Circle) []Vector {
 			contacts = append(contacts, contact)
 		}
 
-		return contacts
+		return contacts, nil
 	}
 }
 
 // ContactLineToLine returns the contact point between
 // two lines (if it exists).
-func ContactLineToLine(one, other *Line) []Vector {
+func ContactLineToLine(one, other *Line) ([]Vector, error) {
+	if one == nil {
+		return nil, fmt.Errorf("the first line is nil")
+	}
+
+	if other == nil {
+		return nil, fmt.Errorf("the second line is nil")
+	}
+
 	innerContact := func(a, b, c, d Vector) []Vector {
 		cmp := c.Subtract(a)
 		r := b.Subtract(a)
@@ -151,12 +175,20 @@ func ContactLineToLine(one, other *Line) []Vector {
 	contacts = append(contacts,
 		innerContact(one.q, one.p, other.p, other.q)...)
 
-	return contacts
+	return contacts, nil
 }
 
 // ContactLineToRectangle returns the contacts between the line and
 // the rectangle (if they exist).
-func ContactLineToRectangle(line *Line, rect *Rectangle) []Vector {
+func ContactLineToRectangle(line *Line, rect *Rectangle) ([]Vector, error) {
+	if line == nil {
+		return nil, fmt.Errorf("the line is nil")
+	}
+
+	if rect == nil {
+		return nil, fmt.Errorf("the rectangle is nil")
+	}
+
 	vertices := rect.Vertices()
 	sides := []*Line{
 		NewLine(vertices[0], vertices[1]),
@@ -167,16 +199,29 @@ func ContactLineToRectangle(line *Line, rect *Rectangle) []Vector {
 	contacts := make([]Vector, 0)
 
 	for _, side := range sides {
-		sideContacts := ContactLineToLine(line, side)
+		sideContacts, err := ContactLineToLine(line, side)
+
+		if err != nil {
+			return nil, err
+		}
+
 		contacts = append(contacts, sideContacts...)
 	}
 
-	return contacts
+	return contacts, nil
 }
 
 // ContactRectangleToCircle returns the contacts between the rectangle and
 // the circle (if they exist).
-func ContactRectangleToCircle(rect *Rectangle, circle *Circle) []Vector {
+func ContactRectangleToCircle(rect *Rectangle, circle *Circle) ([]Vector, error) {
+	if rect == nil {
+		return nil, fmt.Errorf("the rectangle is nil")
+	}
+
+	if circle == nil {
+		return nil, fmt.Errorf("the circle is nil")
+	}
+
 	vertices := rect.Vertices()
 	sides := []*Line{
 		NewLine(vertices[0], vertices[1]),
@@ -187,16 +232,21 @@ func ContactRectangleToCircle(rect *Rectangle, circle *Circle) []Vector {
 	contacts := make([]Vector, 0)
 
 	for _, side := range sides {
-		sideContacts := ContactLineToCircle(side, circle)
+		sideContacts, err := ContactLineToCircle(side, circle)
+
+		if err != nil {
+			return nil, err
+		}
+
 		contacts = append(contacts, sideContacts...)
 	}
 
-	return contacts
+	return contacts, nil
 }
 
 // ContactRectangleToRectangle returns the contacts between two rectangles
 // (if they exist).
-func ContactRectangleToRectangle(one, other *Rectangle) []Vector {
+func ContactRectangleToRectangle(one, other *Rectangle) ([]Vector, error) {
 	oneVertices := one.Vertices()
 	oneSides := []*Line{
 		NewLine(oneVertices[0], oneVertices[1]),
@@ -217,17 +267,30 @@ func ContactRectangleToRectangle(one, other *Rectangle) []Vector {
 
 	for _, oneSide := range oneSides {
 		for _, otherSide := range otherSides {
-			sideContacts := ContactLineToLine(oneSide, otherSide)
+			sideContacts, err := ContactLineToLine(oneSide, otherSide)
+
+			if err != nil {
+				return nil, err
+			}
+
 			contacts = append(contacts, sideContacts...)
 		}
 	}
 
-	return contacts
+	return contacts, nil
 }
 
 // ContactCircleToCircle returns the contact point between
 // two circles (if it exists).
-func ContactCircleToCircle(one, other *Circle) []Vector {
+func ContactCircleToCircle(one, other *Circle) ([]Vector, error) {
+	if one == nil {
+		return nil, fmt.Errorf("the first circle is nil")
+	}
+
+	if other == nil {
+		return nil, fmt.Errorf("the second circle is nil")
+	}
+
 	var (
 		r  float64
 		R  float64
@@ -263,19 +326,19 @@ func ContactCircleToCircle(one, other *Circle) []Vector {
 
 	// Infinite number of contacts.
 	if d < Epsilon && math.Abs(r-R) < Epsilon {
-		return []Vector{}
+		return []Vector{}, nil
 	}
 
 	// No instersection between the circles.
 	// No contacts.
 	if d < Epsilon {
-		return []Vector{}
+		return []Vector{}, nil
 	}
 
 	// One circle within the other.
 	// No contacts.
 	if d+r < R || R+r < d {
-		return []Vector{}
+		return []Vector{}, nil
 	}
 
 	p := Vector{
@@ -285,11 +348,8 @@ func ContactCircleToCircle(one, other *Circle) []Vector {
 
 	// One intersection point.
 	if math.Abs(r+R-d) < Epsilon {
-		return []Vector{p}
+		return []Vector{p}, nil
 	}
-
-	// ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0,
-	// если радиус круга равен 0.
 
 	// Compute two intersection points.
 	c := NewVector(Cx, Cy)
@@ -319,5 +379,5 @@ func ContactCircleToCircle(one, other *Circle) []Vector {
 	pointA := altRotate(c, p, angle)
 	pointB := altRotate(c, p, -angle)
 
-	return []Vector{pointA, pointB}
+	return []Vector{pointA, pointB}, nil
 }

@@ -1,5 +1,7 @@
 package cirno
 
+import "fmt"
+
 // Shape represents a shape in the space.
 type Shape interface {
 	TypeName() string
@@ -41,30 +43,52 @@ type Shapes map[Shape]none
 
 // Contains checks if the list of shapes contains
 // the given shape.
-func (shapes Shapes) Contains(shape Shape) bool {
+func (shapes Shapes) Contains(shape Shape) (bool, error) {
+	if shape == nil {
+		return false, fmt.Errorf("the shape is nil")
+	}
+
 	_, exists := shapes[shape]
 
-	return exists
+	return exists, nil
 }
 
 // Insert adds the given shape in the set of shapes.
-func (shapes Shapes) Insert(shapesToInsert ...Shape) {
+func (shapes Shapes) Insert(shapesToInsert ...Shape) error {
 	for _, shape := range shapesToInsert {
+		if shape == nil {
+			return fmt.Errorf("the shape is nil")
+		}
+
 		shapes[shape] = none{}
 	}
+
+	return nil
 }
 
 // Merge adds all the shapes from
 // the other set to the current set.
-func (shapes Shapes) Merge(otherShapes Shapes) {
+func (shapes Shapes) Merge(otherShapes Shapes) error {
+	if otherShapes == nil {
+		return fmt.Errorf("the shape set is nil")
+	}
+
 	for shape := range otherShapes {
 		shapes[shape] = none{}
 	}
+
+	return nil
 }
 
 // Remove removes the specified shape from the set.
-func (shapes Shapes) Remove(shape Shape) {
+func (shapes Shapes) Remove(shape Shape) error {
+	if shape == nil {
+		return fmt.Errorf("the shape is nil")
+	}
+
 	delete(shapes, shape)
+
+	return nil
 }
 
 // Items returns the list all the shapes

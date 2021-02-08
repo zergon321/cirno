@@ -1,6 +1,7 @@
 package cirno
 
 import (
+	"fmt"
 	"math"
 	"sort"
 )
@@ -147,7 +148,7 @@ func (l *Line) SquaredLength() float64 {
 
 // ContainsPoint detects if the point lies on the line.
 func (l *Line) ContainsPoint(point Vector) bool {
-	lTmp := NewLine(Zero, l.q.Subtract(l.p))
+	lTmp, _ := NewLine(Zero, l.q.Subtract(l.p))
 	pTmp := point.Subtract(l.p)
 	r := Cross(lTmp.q, pTmp)
 	min, max := l.GetBoundingBox()
@@ -187,30 +188,52 @@ func (l *Line) GetBoundingBox() (Vector, Vector) {
 
 // CollinearTo returns true if the lines are collinear,
 // and false otherwise.
-func (l *Line) CollinearTo(other *Line) bool {
+func (l *Line) CollinearTo(other *Line) (bool, error) {
+	if other == nil {
+		return false, fmt.Errorf("the line is nil")
+	}
+
 	lVec := l.q.Subtract(l.p)
 	otherVec := other.q.Subtract(other.p)
 
-	return lVec.CollinearTo(otherVec)
+	return lVec.CollinearTo(otherVec), nil
 }
 
 // SameLineWith returns true if two line segments
 // lie on the same line.
-func (l *Line) SameLineWith(other *Line) bool {
+func (l *Line) SameLineWith(other *Line) (bool, error) {
+	if other == nil {
+		return false, fmt.Errorf("the line is nil")
+	}
+
 	projP := l.ProjectPoint(other.p)
 	projQ := l.ProjectPoint(other.q)
 
 	return projP.ApproximatelyEqual(other.p) &&
-		projQ.ApproximatelyEqual(other.q)
+		projQ.ApproximatelyEqual(other.q), nil
 }
 
 // ParallelTo checks if two line segments are collinear but
 // don't lie on the same line.
-func (l *Line) ParallelTo(other *Line) bool {
-	return l.CollinearTo(other) && !l.SameLineWith(other)
-}
+func (l *Line) ParallelTo(other *Line) (bool, error) {
+	if other == nil {
+		return false, fmt.Errorf("the line is nil")
+	}
 
-// ОШИБКА ВЫЧИСЛЕНИЯ: деление на 0, если длина линни равна 0.
+	collinear, err := l.CollinearTo(other)
+
+	if err != nil {
+		return false, err
+	}
+
+	sameLine, err := l.SameLineWith(other)
+
+	if err != nil {
+		return false, err
+	}
+
+	return collinear && !sameLine, nil
+}
 
 // ProjectPoint returns the projection of the point
 // onto the line.
@@ -221,22 +244,53 @@ func (l *Line) ProjectPoint(point Vector) Vector {
 	return NewVector(l.p.X+t*(l.q.X-l.p.X), l.p.Y+t*(l.q.Y-l.p.Y))
 }
 
-func (l *Line) isPointRightOfLine(p Vector) bool {
-	lTmp := NewLine(Zero, l.q.Subtract(l.p))
+func (l *Line) isPointRightOfLine(p Vector) (bool, error) {
+	lTmp, err := NewLine(Zero, l.q.Subtract(l.p))
+
+	if err != nil {
+		return false, err
+	}
+
 	pTmp := p.Subtract(l.p)
 
-	return Cross(lTmp.q, pTmp) < 0
+	return Cross(lTmp.q, pTmp) < 0, nil
 }
 
-func (l *Line) touchesOrCrosses(other *Line) bool {
+func (l *Line) touchesOrCrosses(other *Line) (bool, error) {
+	if other == nil {
+		return false, fmt.Errorf("the line is nil")
+	}
+
+	pRight, err := l.isPointRightOfLine(other.p)
+
+	if err != nil {
+		return false, err
+	}
+
+	qRight, err := l.isPointRightOfLine(other.q)
+
+	if err != nil {
+		return false, err
+	}
+
 	return l.ContainsPoint(other.p) ||
 		l.ContainsPoint(other.q) ||
-		(l.isPointRightOfLine(other.p) != l.isPointRightOfLine(other.q))
+		(pRight != qRight), nil
 }
 
 // LinesDistance returns the shortest distance
 // between two lines.
-func LinesDistance(a, b *Line) float64 {
+func LinesDistance(a, b *Line) (float64, error) {
+	if a == nil {
+		return math.NaN(),
+			fmt.Errorf("the first line is nil")
+	}
+
+	if b == nil {
+		return math.NaN(),
+			fmt.Errorf("the second line is nil")
+	}
+
 	apProj := b.ProjectPoint(a.p)
 	aqProj := b.ProjectPoint(a.q)
 	bpProj := a.ProjectPoint(b.p)
@@ -267,11 +321,16 @@ func LinesDistance(a, b *Line) float64 {
 		return distances[i] < distances[j]
 	})
 
-	return distances[0]
+	return distances[0], nil
 }
 
 // NewLine returns a new line segment with the given parameters.
-func NewLine(p Vector, q Vector) *Line {
+func NewLine(p Vector, q Vector) (*Line, error) {
+	if Distance(p, q) < Epsilon {
+		return nil, fmt.Errorf(
+			"the length of the line must be positive")
+	}
+
 	line := &Line{
 		p: p,
 		q: q,
@@ -288,5 +347,5 @@ func NewLine(p Vector, q Vector) *Line {
 
 	line.treeNodes = []*quadTreeNode{}
 
-	return line
+	return line, nil
 }

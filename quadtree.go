@@ -80,7 +80,13 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !node.boundary.collidesShape(shape) {
+		inBounds, err := node.boundary.collidesShape(shape)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if !inBounds {
 			continue
 		}
 
@@ -127,11 +133,11 @@ func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 // search returns all the nodes containing the given shape.
 func (tree *quadTree) search(shape Shape) ([]*quadTreeNode, error) {
 	if shape == nil {
-		return nil, fmt.Errorf("The shape cannot be nil")
+		return nil, fmt.Errorf("the shape is nil")
 	}
 
 	if !tree.root.boundary.containsPoint(shape.Center()) {
-		return nil, fmt.Errorf("The shape is out of bounds")
+		return nil, fmt.Errorf("the shape is out of bounds")
 	}
 
 	nodes := []*quadTreeNode{}
@@ -143,11 +149,23 @@ func (tree *quadTree) search(shape Shape) ([]*quadTreeNode, error) {
 
 		// If the shape is not covered by the node area,
 		// skip it to the next node.
-		if !node.boundary.collidesShape(shape) {
+		inBounds, err := node.boundary.collidesShape(shape)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if !inBounds {
 			continue
 		}
 
-		if node.northWest == nil && node.shapes.Contains(shape) {
+		exists, err := node.shapes.Contains(shape)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if node.northWest == nil && exists {
 			nodes = append(nodes, node)
 		} else {
 			nodeQueue.Enqueue(node.northEast)

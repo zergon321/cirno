@@ -8,9 +8,9 @@ import (
 )
 
 func TestLinesAreCollinear(t *testing.T) {
-	l1 := cirno.NewLine(cirno.NewVector(1, 3), cirno.NewVector(3, 5))
-	l2 := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(5, 5))
-	l3 := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(5, 1))
+	l1, _ := cirno.NewLine(cirno.NewVector(1, 3), cirno.NewVector(3, 5))
+	l2, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(5, 5))
+	l3, _ := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(5, 1))
 
 	assert.True(t, l1.CollinearTo(l2))
 	assert.True(t, l2.CollinearTo(l1))
@@ -21,7 +21,7 @@ func TestLinesAreCollinear(t *testing.T) {
 }
 
 func TestProjectPointOntoLine(t *testing.T) {
-	line := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(8, 1))
+	line, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(8, 1))
 	p1 := cirno.NewVector(3, 4)
 	r1 := cirno.NewVector(3, 1)
 	p2 := cirno.NewVector(9, 5)
@@ -33,17 +33,17 @@ func TestProjectPointOntoLine(t *testing.T) {
 	assert.Equal(t, line.ProjectPoint(p2), r2)
 	assert.Equal(t, line.ProjectPoint(p3), r3)
 
-	line = cirno.NewLine(cirno.NewVector(3, 2), cirno.NewVector(6, 4))
+	line, _ = cirno.NewLine(cirno.NewVector(3, 2), cirno.NewVector(6, 4))
 	t.Log("Projection of P1:", line.ProjectPoint(p1))
 	t.Log("Projection of P2:", line.ProjectPoint(p2))
 	t.Log("Projection of P3:", line.ProjectPoint(p3))
 }
 
 func TestLineSegmentsOnSameLine(t *testing.T) {
-	l1 := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(3, 3))
-	l2 := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
-	l3 := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(4, 4))
-	l4 := cirno.NewLine(cirno.NewVector(2, 3), cirno.NewVector(4, 1))
+	l1, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(3, 3))
+	l2, _ := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
+	l3, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(4, 4))
+	l4, _ := cirno.NewLine(cirno.NewVector(2, 3), cirno.NewVector(4, 1))
 
 	assert.True(t, l1.SameLineWith(l2))
 	assert.True(t, l2.SameLineWith(l1))
@@ -51,9 +51,9 @@ func TestLineSegmentsOnSameLine(t *testing.T) {
 }
 
 func TestLinesAreParallel(t *testing.T) {
-	l1 := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(3, 3))
-	l2 := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
-	l3 := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(6, 4))
+	l1, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(3, 3))
+	l2, _ := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
+	l3, _ := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(6, 4))
 
 	assert.True(t, l1.ParallelTo(l3))
 	assert.True(t, l3.ParallelTo(l1))

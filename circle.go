@@ -1,5 +1,7 @@
 package cirno
 
+import "fmt"
+
 // Circle represents a geometric euclidian circle.
 type Circle struct {
 	center Vector
@@ -119,16 +121,17 @@ func (c *Circle) ContainsPoint(point Vector) bool {
 	return d.SquaredMagnitude() <= c.radius*c.radius
 }
 
-// ОШИБКА ИНТЕРФЕЙСА: возможно указание отрицательного
-//  или нулевого значения для радиуса окружности.
-
 // NewCircle create a new circle with the given parameters.
-func NewCircle(position Vector, radius float64) *Circle {
+func NewCircle(position Vector, radius float64) (*Circle, error) {
+	if radius <= 0 {
+		return nil, fmt.Errorf(
+			"circle radius must be positive, but got %f", radius)
+	}
 	circle := &Circle{}
 
 	circle.center = position
 	circle.radius = radius
 	circle.treeNodes = []*quadTreeNode{}
 
-	return circle
+	return circle, nil
 }
