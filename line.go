@@ -244,6 +244,8 @@ func (l *Line) ProjectPoint(point Vector) Vector {
 	return NewVector(l.p.X+t*(l.q.X-l.p.X), l.p.Y+t*(l.q.Y-l.p.Y))
 }
 
+// isPointRightOfLine returns true if the given point
+// is located to the right of the line, and false otherwise.
 func (l *Line) isPointRightOfLine(p Vector) (bool, error) {
 	lTmp, err := NewLine(Zero, l.q.Subtract(l.p))
 
@@ -256,6 +258,8 @@ func (l *Line) isPointRightOfLine(p Vector) (bool, error) {
 	return Cross(lTmp.q, pTmp) < 0, nil
 }
 
+// touchesOrCrosses returns true if the line touches
+// or crosses the otehr line, and false otherwise.
 func (l *Line) touchesOrCrosses(other *Line) (bool, error) {
 	if other == nil {
 		return false, fmt.Errorf("the line is nil")

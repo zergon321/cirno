@@ -24,12 +24,12 @@ type Shape interface {
 	GetMask() int32
 	SetMask(int32)
 
-	ShouldCollide(Shape) bool
+	ShouldCollide(Shape) (bool, error)
 
 	Data() interface{}
 	SetData(data interface{})
 
-	NormalTo(Shape) Vector
+	NormalTo(Shape) (Vector, error)
 
 	nodes() []*quadTreeNode
 	addNodes(...*quadTreeNode)

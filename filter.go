@@ -1,7 +1,8 @@
 package cirno
 
-// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
-// не происходит проверка аргумента на nil (пустой указатель).
+import (
+	"fmt"
+)
 
 // FilterByIdentity returns all the shapes
 // matching the specified identity template.
@@ -33,42 +34,78 @@ func (shapes Shapes) FilterByMask(mask int32) Shapes {
 
 // FilterByCollisionRight returns all the shapes the given shape
 // should collide.
-func (shapes Shapes) FilterByCollisionRight(shape Shape) Shapes {
+func (shapes Shapes) FilterByCollisionRight(shape Shape) (Shapes, error) {
+	if shape == nil {
+		return nil, fmt.Errorf("the shape is nil")
+	}
+
 	filteredShapes := make(Shapes, 0)
 
 	for item := range shapes {
-		if shape.ShouldCollide(item) {
+		shouldCollide, err := shape.ShouldCollide(item)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if shouldCollide {
 			filteredShapes.Insert(item)
 		}
 	}
 
-	return filteredShapes
+	return filteredShapes, nil
 }
 
 // FilterByCollisionLeft returns all the shapes that should
 // collide the given shape.
-func (shapes Shapes) FilterByCollisionLeft(shape Shape) Shapes {
+func (shapes Shapes) FilterByCollisionLeft(shape Shape) (Shapes, error) {
+	if shape == nil {
+		return nil, fmt.Errorf("the shape is nil")
+	}
+
 	filteredShapes := make(Shapes, 0)
 
 	for item := range shapes {
-		if item.ShouldCollide(shape) {
+		shouldCollide, err := item.ShouldCollide(shape)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if shouldCollide {
 			filteredShapes.Insert(item)
 		}
 	}
 
-	return filteredShapes
+	return filteredShapes, nil
 }
 
 // FilterByCollision returns all the shapes that should collide
 // or get collided by the given shape.
-func (shapes Shapes) FilterByCollision(shape Shape) Shapes {
+func (shapes Shapes) FilterByCollision(shape Shape) (Shapes, error) {
+	if shape == nil {
+		return nil, fmt.Errorf("the shape is nil")
+	}
+
 	filteredShapes := make(Shapes, 0)
 
 	for item := range shapes {
-		if item.ShouldCollide(shape) || shape.ShouldCollide(item) {
+		shouldCollideLeft, err := item.ShouldCollide(shape)
+
+		if err != nil {
+			return nil, err
+		}
+
+		shouldCollideRight, err := shape.ShouldCollide(item)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if shouldCollideLeft || shouldCollideRight {
 			filteredShapes.Insert(item)
 		}
 	}
 
-	return filteredShapes
+	return filteredShapes, nil
 }

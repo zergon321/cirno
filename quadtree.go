@@ -64,11 +64,11 @@ func (tree *quadTree) containsLeaf(node *quadTreeNode) bool {
 // and returns them.
 func (tree *quadTree) insert(shape Shape) ([]*quadTreeNode, error) {
 	if shape == nil {
-		return nil, fmt.Errorf("The shape cannot be nil")
+		return nil, fmt.Errorf("the shape cannot be nil")
 	}
 
 	if !tree.root.boundary.containsPoint(shape.Center()) {
-		return nil, fmt.Errorf("The shape is out of bounds")
+		return nil, fmt.Errorf("the shape is out of bounds")
 	}
 
 	nodes := []*quadTreeNode{}
@@ -181,11 +181,11 @@ func (tree *quadTree) search(shape Shape) ([]*quadTreeNode, error) {
 // remove removes the specified shape from the quad tree.
 func (tree *quadTree) remove(shape Shape) error {
 	if shape == nil {
-		return fmt.Errorf("The shape cannot be nil")
+		return fmt.Errorf("the shape cannot be nil")
 	}
 
 	if !tree.root.boundary.containsPoint(shape.Center()) {
-		return fmt.Errorf("The shape is out of bounds")
+		return fmt.Errorf("the shape is out of bounds")
 	}
 
 	for _, node := range shape.nodes() {
@@ -285,7 +285,7 @@ func (tree *quadTree) shapeGroups() map[*quadTreeNode]Shapes {
 // newQuadTree creates a new empty quad tree.
 func newQuadTree(boundary *aabb, maxLevel, nodeCapacity int) (*quadTree, error) {
 	if maxLevel < 1 {
-		return nil, fmt.Errorf("Max depth must be greater or equal to 1")
+		return nil, fmt.Errorf("max depth must be greater or equal to 1")
 	}
 
 	tree := new(quadTree)

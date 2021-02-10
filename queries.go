@@ -10,7 +10,7 @@ import (
 // to the origin of the ray.
 //
 // Ray cannot hit against the shape within which it's located.
-func (space *Space) Raycast(origin Vector, direction Vector, distance float64, mask int32) (Shape, Vector, error) {
+func (space *Space) Raycast(origin, direction Vector, distance float64, mask int32) (Shape, Vector, error) {
 	if Sign(direction.X) == 0 && Sign(direction.Y) == 0 {
 		return nil, Zero, fmt.Errorf("the direction vector is zero")
 	}
@@ -96,6 +96,10 @@ func (space *Space) Raycast(origin Vector, direction Vector, distance float64, m
 // Boxcast casts a box in the space and returns all the
 // shapes overlapped by this box.
 func (space *Space) Boxcast(rect *Rectangle) (Shapes, error) {
+	if rect == nil {
+		return nil, fmt.Errorf("the rectangle is nil")
+	}
+
 	nodeQueue := queue.New()
 	nodeQueue.Enqueue(space.tree.root)
 	shapes := make(Shapes, 0)
@@ -133,6 +137,10 @@ func (space *Space) Boxcast(rect *Rectangle) (Shapes, error) {
 // Circlecast casts a circle in the space and returns all the
 // shapes overlapped by the circle.
 func (space *Space) Circlecast(circle *Circle) (Shapes, error) {
+	if circle == nil {
+		return nil, fmt.Errorf("the circle is nil")
+	}
+
 	nodeQueue := queue.New()
 	nodeQueue.Enqueue(space.tree.root)
 	shapes := make(Shapes, 0)

@@ -16,7 +16,13 @@ func ResolveCollision(one, another Shape, useTags bool) (bool, error) {
 		return false, fmt.Errorf("the second shape is nil")
 	}
 
-	if useTags && !one.ShouldCollide(another) {
+	shouldCollide, err := one.ShouldCollide(another)
+
+	if err != nil {
+		return false, err
+	}
+
+	if useTags && !shouldCollide {
 		return false, nil
 	}
 

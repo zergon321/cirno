@@ -5,9 +5,6 @@ import (
 	"math"
 )
 
-// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
-// не происходит проверка аргумента на nil (пустой указатель).
-
 // Contact returns the contact points between two given shapes
 // (if they exist).
 func Contact(one, other Shape) ([]Vector, error) {
@@ -190,11 +187,35 @@ func ContactLineToRectangle(line *Line, rect *Rectangle) ([]Vector, error) {
 	}
 
 	vertices := rect.Vertices()
+	sideAB, err := NewLine(vertices[0], vertices[1])
+
+	if err != nil {
+		return nil, err
+	}
+
+	sideBC, err := NewLine(vertices[1], vertices[2])
+
+	if err != nil {
+		return nil, err
+	}
+
+	sideCD, err := NewLine(vertices[2], vertices[3])
+
+	if err != nil {
+		return nil, err
+	}
+
+	sideAD, err := NewLine(vertices[0], vertices[3])
+
+	if err != nil {
+		return nil, err
+	}
+
 	sides := []*Line{
-		NewLine(vertices[0], vertices[1]),
-		NewLine(vertices[1], vertices[2]),
-		NewLine(vertices[2], vertices[3]),
-		NewLine(vertices[0], vertices[3]),
+		sideAB,
+		sideBC,
+		sideCD,
+		sideAD,
 	}
 	contacts := make([]Vector, 0)
 
@@ -223,11 +244,35 @@ func ContactRectangleToCircle(rect *Rectangle, circle *Circle) ([]Vector, error)
 	}
 
 	vertices := rect.Vertices()
+	sideAB, err := NewLine(vertices[0], vertices[1])
+
+	if err != nil {
+		return nil, err
+	}
+
+	sideBC, err := NewLine(vertices[1], vertices[2])
+
+	if err != nil {
+		return nil, err
+	}
+
+	sideCD, err := NewLine(vertices[2], vertices[3])
+
+	if err != nil {
+		return nil, err
+	}
+
+	sideAD, err := NewLine(vertices[0], vertices[3])
+
+	if err != nil {
+		return nil, err
+	}
+
 	sides := []*Line{
-		NewLine(vertices[0], vertices[1]),
-		NewLine(vertices[1], vertices[2]),
-		NewLine(vertices[2], vertices[3]),
-		NewLine(vertices[0], vertices[3]),
+		sideAB,
+		sideBC,
+		sideCD,
+		sideAD,
 	}
 	contacts := make([]Vector, 0)
 
@@ -247,20 +292,76 @@ func ContactRectangleToCircle(rect *Rectangle, circle *Circle) ([]Vector, error)
 // ContactRectangleToRectangle returns the contacts between two rectangles
 // (if they exist).
 func ContactRectangleToRectangle(one, other *Rectangle) ([]Vector, error) {
+	if one == nil {
+		return nil, fmt.Errorf("the first rectangle is nil")
+	}
+
+	if other == nil {
+		return nil, fmt.Errorf("the second rectangle is nil")
+	}
+
 	oneVertices := one.Vertices()
+	oneSideAB, err := NewLine(oneVertices[0], oneVertices[1])
+
+	if err != nil {
+		return nil, err
+	}
+
+	oneSideBC, err := NewLine(oneVertices[1], oneVertices[2])
+
+	if err != nil {
+		return nil, err
+	}
+
+	oneSideCD, err := NewLine(oneVertices[2], oneVertices[3])
+
+	if err != nil {
+		return nil, err
+	}
+
+	oneSideAD, err := NewLine(oneVertices[0], oneVertices[3])
+
+	if err != nil {
+		return nil, err
+	}
+
 	oneSides := []*Line{
-		NewLine(oneVertices[0], oneVertices[1]),
-		NewLine(oneVertices[1], oneVertices[2]),
-		NewLine(oneVertices[2], oneVertices[3]),
-		NewLine(oneVertices[0], oneVertices[3]),
+		oneSideAB,
+		oneSideBC,
+		oneSideCD,
+		oneSideAD,
 	}
 
 	otherVertices := other.Vertices()
+	otherSideAB, err := NewLine(otherVertices[0], otherVertices[1])
+
+	if err != nil {
+		return nil, err
+	}
+
+	otherSideBC, err := NewLine(otherVertices[1], otherVertices[2])
+
+	if err != nil {
+		return nil, err
+	}
+
+	otherSideCD, err := NewLine(otherVertices[2], otherVertices[3])
+
+	if err != nil {
+		return nil, err
+	}
+
+	otherSideAD, err := NewLine(otherVertices[0], otherVertices[3])
+
+	if err != nil {
+		return nil, err
+	}
+
 	otherSides := []*Line{
-		NewLine(otherVertices[0], otherVertices[1]),
-		NewLine(otherVertices[1], otherVertices[2]),
-		NewLine(otherVertices[2], otherVertices[3]),
-		NewLine(otherVertices[0], otherVertices[3]),
+		otherSideAB,
+		otherSideBC,
+		otherSideCD,
+		otherSideAD,
 	}
 
 	contacts := make([]Vector, 0)

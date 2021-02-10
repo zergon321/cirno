@@ -1,5 +1,7 @@
 package cirno
 
+import "fmt"
+
 // tag identifies the kind of the shape
 // to collide other shapes.
 type tag struct {
@@ -11,13 +13,14 @@ type tag struct {
 	mask int32
 }
 
-// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
-// не происходит проверка аргумента на nil (пустой указатель).
-
 // ShouldCollide returns true if the shape should
 // collide another one accodring to their tags.
-func (t tag) ShouldCollide(other Shape) bool {
-	return t.mask&other.GetIdentity() > 0
+func (t tag) ShouldCollide(other Shape) (bool, error) {
+	if other == nil {
+		return false, fmt.Errorf("the shape is nil")
+	}
+
+	return t.mask&other.GetIdentity() > 0, nil
 }
 
 // GetIdentity returns the valye of the shape identity.

@@ -1,15 +1,17 @@
 package cirno
 
 import (
+	"fmt"
 	"math"
 )
 
-// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
-// не происходит проверка аргумента на nil (пустой указатель).
-
 // NormalTo returns the normal from the given circle
 // to the other shape.
-func (circle *Circle) NormalTo(shape Shape) Vector {
+func (circle *Circle) NormalTo(shape Shape) (Vector, error) {
+	if shape == nil {
+		return Zero, fmt.Errorf("the shape is nil")
+	}
+
 	switch other := shape.(type) {
 	case *Circle:
 		return circle.NormalToCircle(other)
@@ -21,12 +23,16 @@ func (circle *Circle) NormalTo(shape Shape) Vector {
 		return circle.NormalToRectangle(other)
 	}
 
-	return Zero
+	return Zero, fmt.Errorf("unknown shape type")
 }
 
 // NormalTo returns the normal from the given rectangle
 // to the other shape.
-func (rect *Rectangle) NormalTo(shape Shape) Vector {
+func (rect *Rectangle) NormalTo(shape Shape) (Vector, error) {
+	if shape == nil {
+		return Zero, fmt.Errorf("the shape is nil")
+	}
+
 	switch other := shape.(type) {
 	case *Circle:
 		return rect.NormalToCircle(other)
@@ -38,12 +44,16 @@ func (rect *Rectangle) NormalTo(shape Shape) Vector {
 		return rect.NormalToRectangle(other)
 	}
 
-	return Zero
+	return Zero, fmt.Errorf("unknown shape type")
 }
 
 // NormalTo returns the normal from the given line to
 // the other shape.
-func (line *Line) NormalTo(shape Shape) Vector {
+func (line *Line) NormalTo(shape Shape) (Vector, error) {
+	if shape == nil {
+		return Zero, fmt.Errorf("the shape is nil")
+	}
+
 	switch other := shape.(type) {
 	case *Circle:
 		return line.NormalToCircle(other)
@@ -55,18 +65,28 @@ func (line *Line) NormalTo(shape Shape) Vector {
 		return line.NormalToRectangle(other)
 	}
 
-	return Zero
+	return Zero, fmt.Errorf("unknown shape type")
 }
 
 // NormalToCircle returns the normal from the given circle
 // to the other circle.
-func (circle *Circle) NormalToCircle(other *Circle) Vector {
-	return other.center.Subtract(circle.center).Normalize()
+func (circle *Circle) NormalToCircle(other *Circle) (Vector, error) {
+	if other == nil {
+		return Zero, fmt.Errorf("the other circle is nil")
+	}
+
+	return other.center.Subtract(circle.center).Normalize(), nil
 }
+
+// TODO: use AABB.
 
 // NormalToRectangle returns the normal from the given circle
 // to the rectangle.
-func (circle *Circle) NormalToRectangle(rect *Rectangle) Vector {
+func (circle *Circle) NormalToRectangle(rect *Rectangle) (Vector, error) {
+	if rect == nil {
+		return Zero, fmt.Errorf("the rectangle is nil")
+	}
+
 	// Transform the circle center coordinates from the world space
 	// to the rectangle's local space.
 	t := circle.center.Subtract(rect.center)
@@ -101,12 +121,16 @@ func (circle *Circle) NormalToRectangle(rect *Rectangle) Vector {
 	closestPoint = closestPoint.Rotate(-theta).Add(rect.center)
 	normal := closestPoint.Subtract(circle.center).Normalize()
 
-	return normal
+	return normal, nil
 }
 
 // NormalToLine returns the normal from the given circle
 // to the line.
-func (circle *Circle) NormalToLine(line *Line) Vector {
+func (circle *Circle) NormalToLine(line *Line) (Vector, error) {
+	if line == nil {
+		return Zero, fmt.Errorf("the line is nil")
+	}
+
 	closestPoint := line.ProjectPoint(circle.center)
 
 	if !line.ContainsPoint(closestPoint) {
@@ -130,52 +154,95 @@ func (circle *Circle) NormalToLine(line *Line) Vector {
 		normal.Y = 0.0
 	}
 
-	return normal
+	return normal, nil
 }
 
 // NormalToCircle returns the normal from the given line
 // to the circle.
-func (line *Line) NormalToCircle(circle *Circle) Vector {
-	return circle.NormalToLine(line).MultiplyByScalar(-1)
+func (line *Line) NormalToCircle(circle *Circle) (Vector, error) {
+	if circle == nil {
+		return Zero, fmt.Errorf("the circle is nil")
+	}
+
+	normalToLine, err := circle.NormalToLine(line)
+
+	if err != nil {
+		return Zero, err
+	}
+
+	return normalToLine.MultiplyByScalar(-1), nil
 }
 
 // NormalToLine returns the normal from the given line
 // to the other line.
-func (line *Line) NormalToLine(other *Line) Vector {
+func (line *Line) NormalToLine(other *Line) (Vector, error) {
+	if line == nil {
+		return Zero, fmt.Errorf("the line is nil")
+	}
+
 	normal := Zero
+	pRightOfLine, err := line.isPointRightOfLine(other.p)
 
-	if line.isPointRightOfLine(other.p) ==
-		line.isPointRightOfLine(other.q) {
+	if err != nil {
+		return Zero, err
+	}
+
+	qRightOfLine, err := line.isPointRightOfLine(other.q)
+
+	if err != nil {
+		return Zero, err
+	}
+
+	if pRightOfLine == qRightOfLine {
 		pointProj := line.ProjectPoint(other.p)
-
 		normal = other.p.Subtract(pointProj).Normalize()
 	} else {
 		pointProj := other.ProjectPoint(line.p)
-
 		normal = pointProj.Subtract(line.p).Normalize()
 	}
 
-	return normal
+	return normal, nil
 }
 
 // NormalToRectangle returns the normal from the given line
 // to the rectangle.
-func (line *Line) NormalToRectangle(rect *Rectangle) Vector {
-	return rect.NormalToLine(line).MultiplyByScalar(-1)
+func (line *Line) NormalToRectangle(rect *Rectangle) (Vector, error) {
+	if rect == nil {
+		return Zero, fmt.Errorf("the rectangle is nil")
+	}
+
+	normalToLine, err := rect.NormalToLine(line)
+
+	if err != nil {
+		return Zero, err
+	}
+
+	return normalToLine.MultiplyByScalar(-1), nil
 }
 
 // NormalToCircle returns the normal from the given rectangle
 // to the circle.
-func (rect *Rectangle) NormalToCircle(circle *Circle) Vector {
-	return circle.NormalToRectangle(rect).MultiplyByScalar(-1)
-}
+func (rect *Rectangle) NormalToCircle(circle *Circle) (Vector, error) {
+	if circle == nil {
+		return Zero, fmt.Errorf("the circle is nil")
+	}
 
-// ОШИБКА ВЫЧИСЛЕНИЯ: нормаль иногда указывает в направлении,
-// противоположном тому, в котором лежит фигура.
+	normalToRect, err := circle.NormalToRectangle(rect)
+
+	if err != nil {
+		return Zero, err
+	}
+
+	return normalToRect.MultiplyByScalar(-1), nil
+}
 
 // NormalToLine returns the normal between the given rectangle
 // and the line.
-func (rect *Rectangle) NormalToLine(line *Line) Vector {
+func (rect *Rectangle) NormalToLine(line *Line) (Vector, error) {
+	if line == nil {
+		return Zero, fmt.Errorf("the line is nil")
+	}
+
 	lineAxisX := line.q.Subtract(line.Center()).Normalize()
 	lineAxisY := lineAxisX.Rotate(90)
 	lineExtent := line.Length() / 2
@@ -196,44 +263,64 @@ func (rect *Rectangle) NormalToLine(line *Line) Vector {
 
 	if sepAx {
 		normal = rect.xAxis
-		sepLine := NewLine(rect.center,
+		sepLine, err := NewLine(rect.center,
 			rect.center.Add(rect.yAxis))
+
+		if err != nil {
+			return Zero, err
+		}
 
 		if sepLine.Orientation(line.Center()) < 0 {
 			normal = normal.MultiplyByScalar(-1)
 		}
 	} else if sepAy {
 		normal = rect.yAxis
-		sepLine := NewLine(rect.center,
+		sepLine, err := NewLine(rect.center,
 			rect.center.Add(rect.xAxis))
+
+		if err != nil {
+			return Zero, err
+		}
 
 		if sepLine.Orientation(line.Center()) > 0 {
 			normal = normal.MultiplyByScalar(-1)
 		}
 	} else if sepLineX {
 		normal = lineAxisX
-		sepLine := NewLine(line.Center(),
+		sepLine, err := NewLine(line.Center(),
 			line.Center().Add(lineAxisY))
+
+		if err != nil {
+			return Zero, err
+		}
 
 		if sepLine.Orientation(rect.center) > 0 {
 			normal = normal.MultiplyByScalar(-1)
 		}
 	} else if sepLineY {
 		normal = lineAxisY
-		sepLine := NewLine(line.Center(),
+		sepLine, err := NewLine(line.Center(),
 			line.Center().Add(lineAxisX))
+
+		if err != nil {
+			return Zero, err
+		}
 
 		if sepLine.Orientation(rect.center) < 0 {
 			normal = normal.MultiplyByScalar(-1)
 		}
 	}
 
-	return normal
+	return normal, nil
 }
 
 // NormalToRectangle returns the normal from the given rectangle to
 // the other rectangle.
-func (rect *Rectangle) NormalToRectangle(other *Rectangle) Vector {
+func (rect *Rectangle) NormalToRectangle(other *Rectangle) (Vector, error) {
+	if other == nil {
+		return Zero, fmt.Errorf("the rectangle is nil")
+	}
+
 	// A vector from the center of rectangle A to the center of rectangle B.
 	t := other.center.Subtract(rect.center)
 
@@ -261,37 +348,53 @@ func (rect *Rectangle) NormalToRectangle(other *Rectangle) Vector {
 
 	if sepAx {
 		normal = rect.xAxis
-		sepLine := NewLine(rect.center,
+		sepLine, err := NewLine(rect.center,
 			rect.center.Add(rect.yAxis))
+
+		if err != nil {
+			return Zero, err
+		}
 
 		if sepLine.Orientation(other.center) < 0 {
 			normal = normal.MultiplyByScalar(-1)
 		}
 	} else if sepAy {
 		normal = rect.yAxis
-		sepLine := NewLine(rect.center,
+		sepLine, err := NewLine(rect.center,
 			rect.center.Add(rect.xAxis))
+
+		if err != nil {
+			return Zero, err
+		}
 
 		if sepLine.Orientation(other.center) > 0 {
 			normal = normal.MultiplyByScalar(-1)
 		}
 	} else if sepBx {
 		normal = other.xAxis
-		sepLine := NewLine(other.center,
+		sepLine, err := NewLine(other.center,
 			other.center.Add(other.yAxis))
+
+		if err != nil {
+			return Zero, err
+		}
 
 		if sepLine.Orientation(rect.center) > 0 {
 			normal = normal.MultiplyByScalar(-1)
 		}
 	} else if sepBy {
 		normal = other.yAxis
-		sepLine := NewLine(other.center,
+		sepLine, err := NewLine(other.center,
 			other.center.Add(other.xAxis))
+
+		if err != nil {
+			return Zero, err
+		}
 
 		if sepLine.Orientation(rect.center) < 0 {
 			normal = normal.MultiplyByScalar(-1)
 		}
 	}
 
-	return normal
+	return normal, nil
 }

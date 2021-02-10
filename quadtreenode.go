@@ -1,5 +1,9 @@
 package cirno
 
+import (
+	"fmt"
+)
+
 // represents a single node in quad tree
 // for a certain subarea.
 type quadTreeNode struct {
@@ -17,6 +21,10 @@ type quadTreeNode struct {
 // add adds all the shapes covered by node area
 // in the set of node shapes.
 func (node *quadTreeNode) add(shapes Shapes) error {
+	if shapes == nil {
+		return fmt.Errorf("the set of shapes is nil")
+	}
+
 	for shape := range shapes {
 		overlapped, err := node.boundary.collidesShape(shape)
 
@@ -35,11 +43,17 @@ func (node *quadTreeNode) add(shapes Shapes) error {
 
 // remove removes all the shapes from the set that
 // have the node in their domains.
-func (node *quadTreeNode) remove(shapes Shapes) {
+func (node *quadTreeNode) remove(shapes Shapes) error {
+	if shapes == nil {
+		return fmt.Errorf("the set of shapes is nil")
+	}
+
 	for shape := range shapes {
 		node.shapes.Remove(shape)
 		shape.removeNodes(node)
 	}
+
+	return nil
 }
 
 // clear removes all the shapes from the node

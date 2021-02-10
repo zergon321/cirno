@@ -46,9 +46,6 @@ func (space *Space) UseTags() bool {
 	return space.useTags
 }
 
-// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: отсутствует проверка значения на nil
-// (пустой указатель).
-
 // InBounds detects if the center the given shape
 // is within the space bounds.
 func (space *Space) InBounds(shape Shape) (bool, error) {
@@ -94,23 +91,25 @@ func (space *Space) AdjustShapePosition(shape Shape) error {
 // Add adds a new shape in the space.
 func (space *Space) Add(shapes ...Shape) error {
 	for _, shape := range shapes {
-		if shape != nil {
-			inBounds, err := space.InBounds(shape)
+		if shape == nil {
+			return fmt.Errorf("the shape is nil")
+		}
 
-			if err != nil {
-				return err
-			}
+		inBounds, err := space.InBounds(shape)
 
-			if !inBounds {
-				return fmt.Errorf("the shape is out of bounds")
-			}
+		if err != nil {
+			return err
+		}
 
-			space.shapes.Insert(shape)
-			_, err = space.tree.insert(shape)
+		if !inBounds {
+			return fmt.Errorf("the shape is out of bounds")
+		}
 
-			if err != nil {
-				return err
-			}
+		space.shapes.Insert(shape)
+		_, err = space.tree.insert(shape)
+
+		if err != nil {
+			return err
 		}
 	}
 
@@ -120,6 +119,10 @@ func (space *Space) Add(shapes ...Shape) error {
 // Remove removes the shape from the space.
 func (space *Space) Remove(shapes ...Shape) error {
 	for _, shape := range shapes {
+		if shape == nil {
+			return fmt.Errorf("the shape is nil")
+		}
+
 		space.shapes.Remove(shape)
 		err := space.tree.remove(shape)
 
@@ -314,6 +317,10 @@ func (space *Space) CollidingShapes() (map[Shape]Shapes, error) {
 
 // CollidingWith returns the set of shapes colliding with the given shape.
 func (space *Space) CollidingWith(shape Shape) (Shapes, error) {
+	if shape == nil {
+		return nil, fmt.Errorf("the shape is nil")
+	}
+
 	shapes := make(Shapes, 0)
 	nodes := shape.nodes()
 
@@ -336,6 +343,10 @@ func (space *Space) CollidingWith(shape Shape) (Shapes, error) {
 
 // CollidedBy returns the set of shapes collided by the given shape.
 func (space *Space) CollidedBy(shape Shape) (Shapes, error) {
+	if shape == nil {
+		return nil, fmt.Errorf("the shape is nil")
+	}
+
 	shapes := make(Shapes, 0)
 	nodes := shape.nodes()
 
@@ -359,6 +370,10 @@ func (space *Space) CollidedBy(shape Shape) (Shapes, error) {
 // WouldBeCollidedBy returns all the shapes that would be collided by
 // the given shape if it moved in the specified direction.
 func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff float64) (Shapes, error) {
+	if shape == nil {
+		return nil, fmt.Errorf("the shape is nil")
+	}
+
 	shapes := make(Shapes, 0)
 	originalPos := shape.Center()
 	originalAngle := shape.Angle()
@@ -407,7 +422,13 @@ func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff flo
 
 				if linesCollinear {
 					// Check line tags.
-					if space.useTags && !lineShape.ShouldCollide(lineItem) {
+					shouldCollide, err := lineShape.ShouldCollide(lineItem)
+
+					if err != nil {
+						return nil, err
+					}
+
+					if space.useTags && !shouldCollide {
 						continue
 					}
 
@@ -454,6 +475,10 @@ func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff flo
 // WouldBeCollidingWith returns all the shapes that would be colliding the given one
 // if it moved in the specified direction.
 func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff float64) (Shapes, error) {
+	if shape == nil {
+		return nil, fmt.Errorf("the shape is nil")
+	}
+
 	shapes := make(Shapes, 0)
 	originalPos := shape.Center()
 	originalAngle := shape.Angle()
@@ -502,7 +527,13 @@ func (space *Space) WouldBeCollidingWith(shape Shape, moveDiff Vector, turnDiff 
 
 				if linesCollinear {
 					// Check line tags.
-					if space.useTags && !lineItem.ShouldCollide(lineShape) {
+					shouldCollide, err := lineItem.ShouldCollide(lineShape)
+
+					if err != nil {
+						return nil, err
+					}
+
+					if space.useTags && !shouldCollide {
 						continue
 					}
 

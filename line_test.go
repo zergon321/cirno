@@ -12,12 +12,19 @@ func TestLinesAreCollinear(t *testing.T) {
 	l2, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(5, 5))
 	l3, _ := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(5, 1))
 
-	assert.True(t, l1.CollinearTo(l2))
-	assert.True(t, l2.CollinearTo(l1))
-	assert.False(t, l1.CollinearTo(l3))
-	assert.False(t, l2.CollinearTo(l3))
-	assert.False(t, l3.CollinearTo(l1))
-	assert.False(t, l3.CollinearTo(l2))
+	res0, _ := l1.CollinearTo(l2)
+	res1, _ := l2.CollinearTo(l1)
+	res2, _ := l1.CollinearTo(l3)
+	res3, _ := l2.CollinearTo(l3)
+	res4, _ := l3.CollinearTo(l1)
+	res5, _ := l3.CollinearTo(l2)
+
+	assert.True(t, res0)
+	assert.True(t, res1)
+	assert.False(t, res2)
+	assert.False(t, res3)
+	assert.False(t, res4)
+	assert.False(t, res5)
 }
 
 func TestProjectPointOntoLine(t *testing.T) {
@@ -45,9 +52,13 @@ func TestLineSegmentsOnSameLine(t *testing.T) {
 	l3, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(4, 4))
 	l4, _ := cirno.NewLine(cirno.NewVector(2, 3), cirno.NewVector(4, 1))
 
-	assert.True(t, l1.SameLineWith(l2))
-	assert.True(t, l2.SameLineWith(l1))
-	assert.False(t, l3.SameLineWith(l4))
+	res0, _ := l1.SameLineWith(l2)
+	res1, _ := l2.SameLineWith(l1)
+	res2, _ := l3.SameLineWith(l4)
+
+	assert.True(t, res0)
+	assert.True(t, res1)
+	assert.False(t, res2)
 }
 
 func TestLinesAreParallel(t *testing.T) {
@@ -55,10 +66,17 @@ func TestLinesAreParallel(t *testing.T) {
 	l2, _ := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
 	l3, _ := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(6, 4))
 
-	assert.True(t, l1.ParallelTo(l3))
-	assert.True(t, l3.ParallelTo(l1))
-	assert.True(t, l2.ParallelTo(l3))
-	assert.True(t, l3.ParallelTo(l2))
-	assert.False(t, l1.ParallelTo(l2))
-	assert.False(t, l2.ParallelTo(l1))
+	res0, _ := l1.ParallelTo(l3)
+	res1, _ := l3.ParallelTo(l1)
+	res2, _ := l2.ParallelTo(l3)
+	res3, _ := l3.ParallelTo(l2)
+	res4, _ := l1.ParallelTo(l2)
+	res5, _ := l2.ParallelTo(l1)
+
+	assert.True(t, res0)
+	assert.True(t, res1)
+	assert.True(t, res2)
+	assert.True(t, res3)
+	assert.False(t, res4)
+	assert.False(t, res5)
 }

@@ -3,11 +3,7 @@ package cirno
 import (
 	"fmt"
 	"math"
-	"reflect"
 )
-
-// ОШИБКА ОБРАЩЕНИЯ К ДАННЫМ: ни в одной из функций данного файла
-// не происходит проверка аргумента на nil (пустой указатель).
 
 const (
 	// RadToDeg is a factor to transfrom radians to degrees.
@@ -72,7 +68,6 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 	originalAngle := shape.Angle()
 	prevPos := originalPos
 	prevAngle := originalAngle
-	shapeType := reflect.TypeOf(shape).Elem()
 
 	for i := 0; i < intensity; i++ {
 		currentPos := prevPos.Add(moveDiff.MultiplyByScalar(step))
@@ -82,8 +77,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 		collisionFound := false
 
 		for other := range shapes {
-			otherShapeType := reflect.TypeOf(other).Elem()
-			id := shapeType.Name() + "_" + otherShapeType.Name()
+			id := shape.TypeName() + "_" + other.TypeName()
 
 			// Make sure lines will collide.
 			if id == "Line_Line" {
@@ -97,7 +91,13 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 
 				if linesCollinear {
 					// Compare line tags.
-					if useTags && !line.ShouldCollide(otherLine) {
+					shouldCollide, err := line.ShouldCollide(otherLine)
+
+					if err != nil {
+						return Zero, 0, nil, err
+					}
+
+					if useTags && !shouldCollide {
 						continue
 					}
 
