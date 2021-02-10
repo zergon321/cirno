@@ -50,21 +50,17 @@ func (r *Rectangle) SetAngleRadians(angle float64) float64 {
 	return r.RotateRadians(angle - r.angle)
 }
 
-// TODO: use AABB.
-
 // ContainsPoint detects if the given point is inside the rectangle.
 func (r *Rectangle) ContainsPoint(point Vector) bool {
 	localPoint := point.Subtract(r.center)
 	theta := -r.angle
 	localPoint = localPoint.Rotate(theta)
-	localRect, _ := NewRectangle(NewVector(0, 0), r.Width(), r.Height(), 0.0)
-	min := localRect.Min()
-	max := localRect.Max()
+	localRect := &aabb{
+		min: NewVector(-r.extents.X, -r.extents.Y),
+		max: NewVector(r.extents.X, r.extents.Y),
+	}
 
-	return min.X <= localPoint.X &&
-		min.Y <= localPoint.Y &&
-		localPoint.X <= max.X &&
-		localPoint.Y <= max.Y
+	return localRect.containsPoint(localPoint)
 }
 
 // Width returns the width of the rectangle.

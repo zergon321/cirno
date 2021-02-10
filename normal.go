@@ -78,8 +78,6 @@ func (circle *Circle) NormalToCircle(other *Circle) (Vector, error) {
 	return other.center.Subtract(circle.center).Normalize(), nil
 }
 
-// TODO: use AABB.
-
 // NormalToRectangle returns the normal from the given circle
 // to the rectangle.
 func (circle *Circle) NormalToRectangle(rect *Rectangle) (Vector, error) {

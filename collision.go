@@ -105,8 +105,6 @@ func CollisionRectangleToRectangle(a, b *Rectangle) (bool, error) {
 	return true, nil
 }
 
-// TODO: use AABB.
-
 // CollisionRectangleToCircle detects if there's an intersection between
 // an oriented rectangle and a circle.
 func CollisionRectangleToCircle(rect *Rectangle, circle *Circle) (bool, error) {
@@ -127,31 +125,12 @@ func CollisionRectangleToCircle(rect *Rectangle, circle *Circle) (bool, error) {
 		center: t,
 		radius: circle.radius,
 	}
-	localRect := &Rectangle{
-		center:  NewVector(0, 0),
-		extents: NewVector(rect.Width()/2, rect.Height()/2),
-		xAxis:   NewVector(1, 0),
-		yAxis:   NewVector(0, 1),
-	}
-	closestPoint := localCircle.center
-
-	// Find the point of the rectangle which is closest to
-	// the center of the circle.
-	if closestPoint.X < localRect.Min().X {
-		closestPoint.X = localRect.Min().X
-	} else if closestPoint.X > localRect.Max().X {
-		closestPoint.X = localRect.Max().X
+	localRect := &aabb{
+		min: NewVector(-rect.extents.X, -rect.extents.Y),
+		max: NewVector(rect.extents.X, rect.extents.Y),
 	}
 
-	if closestPoint.Y < localRect.Min().Y {
-		closestPoint.Y = localRect.Min().Y
-	} else if closestPoint.Y > localRect.Max().Y {
-		closestPoint.Y = localRect.Max().Y
-	}
-
-	// If the closest point is inside the circle,
-	// the rectangle and the circle do intersect.
-	return localCircle.ContainsPoint(closestPoint), nil
+	return localRect.collidesCircle(localCircle)
 }
 
 // CollisionCircleToCircle detects if there's an intersection
