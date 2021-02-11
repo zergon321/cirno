@@ -8,7 +8,8 @@ import (
 )
 
 func TestGetRectangleVertices(t *testing.T) {
-	rect, _ := cirno.NewRectangle(cirno.NewVector(18, 13), 4, 4, 45)
+	rect, err := cirno.NewRectangle(cirno.NewVector(18, 13), 4, 4, 45)
+	assert.Nil(t, err)
 	vertices := rect.Vertices()
 
 	assert.Equal(t, cirno.NewVector(18, 10), vertices[0])

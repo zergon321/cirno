@@ -8,16 +8,25 @@ import (
 )
 
 func TestLinesAreCollinear(t *testing.T) {
-	l1, _ := cirno.NewLine(cirno.NewVector(1, 3), cirno.NewVector(3, 5))
-	l2, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(5, 5))
-	l3, _ := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(5, 1))
+	l1, err := cirno.NewLine(cirno.NewVector(1, 3), cirno.NewVector(3, 5))
+	assert.Nil(t, err)
+	l2, err := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(5, 5))
+	assert.Nil(t, err)
+	l3, err := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(5, 1))
+	assert.Nil(t, err)
 
-	res0, _ := l1.CollinearTo(l2)
-	res1, _ := l2.CollinearTo(l1)
-	res2, _ := l1.CollinearTo(l3)
-	res3, _ := l2.CollinearTo(l3)
-	res4, _ := l3.CollinearTo(l1)
-	res5, _ := l3.CollinearTo(l2)
+	res0, err := l1.CollinearTo(l2)
+	assert.Nil(t, err)
+	res1, err := l2.CollinearTo(l1)
+	assert.Nil(t, err)
+	res2, err := l1.CollinearTo(l3)
+	assert.Nil(t, err)
+	res3, err := l2.CollinearTo(l3)
+	assert.Nil(t, err)
+	res4, err := l3.CollinearTo(l1)
+	assert.Nil(t, err)
+	res5, err := l3.CollinearTo(l2)
+	assert.Nil(t, err)
 
 	assert.True(t, res0)
 	assert.True(t, res1)
@@ -28,7 +37,9 @@ func TestLinesAreCollinear(t *testing.T) {
 }
 
 func TestProjectPointOntoLine(t *testing.T) {
-	line, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(8, 1))
+	line, err := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(8, 1))
+	assert.Nil(t, err)
+
 	p1 := cirno.NewVector(3, 4)
 	r1 := cirno.NewVector(3, 1)
 	p2 := cirno.NewVector(9, 5)
@@ -40,21 +51,30 @@ func TestProjectPointOntoLine(t *testing.T) {
 	assert.Equal(t, line.ProjectPoint(p2), r2)
 	assert.Equal(t, line.ProjectPoint(p3), r3)
 
-	line, _ = cirno.NewLine(cirno.NewVector(3, 2), cirno.NewVector(6, 4))
+	line, err = cirno.NewLine(cirno.NewVector(3, 2), cirno.NewVector(6, 4))
+	assert.Nil(t, err)
+
 	t.Log("Projection of P1:", line.ProjectPoint(p1))
 	t.Log("Projection of P2:", line.ProjectPoint(p2))
 	t.Log("Projection of P3:", line.ProjectPoint(p3))
 }
 
 func TestLineSegmentsOnSameLine(t *testing.T) {
-	l1, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(3, 3))
-	l2, _ := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
-	l3, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(4, 4))
-	l4, _ := cirno.NewLine(cirno.NewVector(2, 3), cirno.NewVector(4, 1))
+	l1, err := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(3, 3))
+	assert.Nil(t, err)
+	l2, err := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
+	assert.Nil(t, err)
+	l3, err := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(4, 4))
+	assert.Nil(t, err)
+	l4, err := cirno.NewLine(cirno.NewVector(2, 3), cirno.NewVector(4, 1))
+	assert.Nil(t, err)
 
-	res0, _ := l1.SameLineWith(l2)
-	res1, _ := l2.SameLineWith(l1)
-	res2, _ := l3.SameLineWith(l4)
+	res0, err := l1.SameLineWith(l2)
+	assert.Nil(t, err)
+	res1, err := l2.SameLineWith(l1)
+	assert.Nil(t, err)
+	res2, err := l3.SameLineWith(l4)
+	assert.Nil(t, err)
 
 	assert.True(t, res0)
 	assert.True(t, res1)
@@ -62,16 +82,25 @@ func TestLineSegmentsOnSameLine(t *testing.T) {
 }
 
 func TestLinesAreParallel(t *testing.T) {
-	l1, _ := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(3, 3))
-	l2, _ := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
-	l3, _ := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(6, 4))
+	l1, err := cirno.NewLine(cirno.NewVector(1, 1), cirno.NewVector(3, 3))
+	assert.Nil(t, err)
+	l2, err := cirno.NewLine(cirno.NewVector(4, 4), cirno.NewVector(6, 6))
+	assert.Nil(t, err)
+	l3, err := cirno.NewLine(cirno.NewVector(3, 1), cirno.NewVector(6, 4))
+	assert.Nil(t, err)
 
-	res0, _ := l1.ParallelTo(l3)
-	res1, _ := l3.ParallelTo(l1)
-	res2, _ := l2.ParallelTo(l3)
-	res3, _ := l3.ParallelTo(l2)
-	res4, _ := l1.ParallelTo(l2)
-	res5, _ := l2.ParallelTo(l1)
+	res0, err := l1.ParallelTo(l3)
+	assert.Nil(t, err)
+	res1, err := l3.ParallelTo(l1)
+	assert.Nil(t, err)
+	res2, err := l2.ParallelTo(l3)
+	assert.Nil(t, err)
+	res3, err := l3.ParallelTo(l2)
+	assert.Nil(t, err)
+	res4, err := l1.ParallelTo(l2)
+	assert.Nil(t, err)
+	res5, err := l2.ParallelTo(l1)
+	assert.Nil(t, err)
 
 	assert.True(t, res0)
 	assert.True(t, res1)
