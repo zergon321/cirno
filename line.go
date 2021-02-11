@@ -148,7 +148,7 @@ func (l *Line) SquaredLength() float64 {
 
 // ContainsPoint detects if the point lies on the line.
 func (l *Line) ContainsPoint(point Vector) bool {
-	lTmp, _ := NewLine(Zero, l.q.Subtract(l.p))
+	lTmp, _ := NewLine(Zero(), l.q.Subtract(l.p))
 	pTmp := point.Subtract(l.p)
 	r := Cross(lTmp.q, pTmp)
 	min, max := l.GetBoundingBox()
@@ -247,7 +247,7 @@ func (l *Line) ProjectPoint(point Vector) Vector {
 // isPointRightOfLine returns true if the given point
 // is located to the right of the line, and false otherwise.
 func (l *Line) isPointRightOfLine(p Vector) (bool, error) {
-	lTmp, err := NewLine(Zero, l.q.Subtract(l.p))
+	lTmp, err := NewLine(Zero(), l.q.Subtract(l.p))
 
 	if err != nil {
 		return false, err
@@ -341,7 +341,7 @@ func NewLine(p Vector, q Vector) (*Line, error) {
 	}
 
 	pq := line.q.Subtract(line.p)
-	angle := Angle(pq, Right)
+	angle := Angle(pq, Right())
 
 	if angle < 0 {
 		line.angle = 360 + angle

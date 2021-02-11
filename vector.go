@@ -4,19 +4,35 @@ import (
 	"math"
 )
 
-// Commonly used normalized vectors.
-var (
-	Up    = Vector{X: 0, Y: 1}
-	Down  = Vector{X: 0, Y: -1}
-	Left  = Vector{X: -1, Y: 0}
-	Right = Vector{X: 1, Y: 0}
-	Zero  = Vector{X: 0, Y: 0}
-)
-
 // Vector represents a 2-dimensional vector.
 type Vector struct {
 	X float64
 	Y float64
+}
+
+// Up is the vector {0; 1}.
+func Up() Vector {
+	return Vector{X: 0, Y: 1}
+}
+
+// Down is the vector {0; -1}.
+func Down() Vector {
+	return Vector{X: 0, Y: -1}
+}
+
+// Left is the vector {-1; 0}.
+func Left() Vector {
+	return Vector{X: -1, Y: 0}
+}
+
+// Right is the vector {1; 0}.
+func Right() Vector {
+	return Vector{X: 1, Y: 0}
+}
+
+// Zero is the vector {0; 0}.
+func Zero() Vector {
+	return Vector{X: 0, Y: 0}
 }
 
 // MultiplyByScalar returns the vector multiplied by the specified scalar.

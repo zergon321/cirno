@@ -9,7 +9,7 @@ import (
 // to the other shape.
 func (circle *Circle) NormalTo(shape Shape) (Vector, error) {
 	if shape == nil {
-		return Zero, fmt.Errorf("the shape is nil")
+		return Zero(), fmt.Errorf("the shape is nil")
 	}
 
 	switch other := shape.(type) {
@@ -23,14 +23,14 @@ func (circle *Circle) NormalTo(shape Shape) (Vector, error) {
 		return circle.NormalToRectangle(other)
 	}
 
-	return Zero, fmt.Errorf("unknown shape type")
+	return Zero(), fmt.Errorf("unknown shape type")
 }
 
 // NormalTo returns the normal from the given rectangle
 // to the other shape.
 func (rect *Rectangle) NormalTo(shape Shape) (Vector, error) {
 	if shape == nil {
-		return Zero, fmt.Errorf("the shape is nil")
+		return Zero(), fmt.Errorf("the shape is nil")
 	}
 
 	switch other := shape.(type) {
@@ -44,14 +44,14 @@ func (rect *Rectangle) NormalTo(shape Shape) (Vector, error) {
 		return rect.NormalToRectangle(other)
 	}
 
-	return Zero, fmt.Errorf("unknown shape type")
+	return Zero(), fmt.Errorf("unknown shape type")
 }
 
 // NormalTo returns the normal from the given line to
 // the other shape.
 func (line *Line) NormalTo(shape Shape) (Vector, error) {
 	if shape == nil {
-		return Zero, fmt.Errorf("the shape is nil")
+		return Zero(), fmt.Errorf("the shape is nil")
 	}
 
 	switch other := shape.(type) {
@@ -65,14 +65,14 @@ func (line *Line) NormalTo(shape Shape) (Vector, error) {
 		return line.NormalToRectangle(other)
 	}
 
-	return Zero, fmt.Errorf("unknown shape type")
+	return Zero(), fmt.Errorf("unknown shape type")
 }
 
 // NormalToCircle returns the normal from the given circle
 // to the other circle.
 func (circle *Circle) NormalToCircle(other *Circle) (Vector, error) {
 	if other == nil {
-		return Zero, fmt.Errorf("the other circle is nil")
+		return Zero(), fmt.Errorf("the other circle is nil")
 	}
 
 	return other.center.Subtract(circle.center).Normalize(), nil
@@ -82,7 +82,7 @@ func (circle *Circle) NormalToCircle(other *Circle) (Vector, error) {
 // to the rectangle.
 func (circle *Circle) NormalToRectangle(rect *Rectangle) (Vector, error) {
 	if rect == nil {
-		return Zero, fmt.Errorf("the rectangle is nil")
+		return Zero(), fmt.Errorf("the rectangle is nil")
 	}
 
 	// Transform the circle center coordinates from the world space
@@ -126,7 +126,7 @@ func (circle *Circle) NormalToRectangle(rect *Rectangle) (Vector, error) {
 // to the line.
 func (circle *Circle) NormalToLine(line *Line) (Vector, error) {
 	if line == nil {
-		return Zero, fmt.Errorf("the line is nil")
+		return Zero(), fmt.Errorf("the line is nil")
 	}
 
 	closestPoint := line.ProjectPoint(circle.center)
@@ -159,13 +159,13 @@ func (circle *Circle) NormalToLine(line *Line) (Vector, error) {
 // to the circle.
 func (line *Line) NormalToCircle(circle *Circle) (Vector, error) {
 	if circle == nil {
-		return Zero, fmt.Errorf("the circle is nil")
+		return Zero(), fmt.Errorf("the circle is nil")
 	}
 
 	normalToLine, err := circle.NormalToLine(line)
 
 	if err != nil {
-		return Zero, err
+		return Zero(), err
 	}
 
 	return normalToLine.MultiplyByScalar(-1), nil
@@ -175,20 +175,20 @@ func (line *Line) NormalToCircle(circle *Circle) (Vector, error) {
 // to the other line.
 func (line *Line) NormalToLine(other *Line) (Vector, error) {
 	if line == nil {
-		return Zero, fmt.Errorf("the line is nil")
+		return Zero(), fmt.Errorf("the line is nil")
 	}
 
-	normal := Zero
+	normal := Zero()
 	pRightOfLine, err := line.isPointRightOfLine(other.p)
 
 	if err != nil {
-		return Zero, err
+		return Zero(), err
 	}
 
 	qRightOfLine, err := line.isPointRightOfLine(other.q)
 
 	if err != nil {
-		return Zero, err
+		return Zero(), err
 	}
 
 	if pRightOfLine == qRightOfLine {
@@ -206,13 +206,13 @@ func (line *Line) NormalToLine(other *Line) (Vector, error) {
 // to the rectangle.
 func (line *Line) NormalToRectangle(rect *Rectangle) (Vector, error) {
 	if rect == nil {
-		return Zero, fmt.Errorf("the rectangle is nil")
+		return Zero(), fmt.Errorf("the rectangle is nil")
 	}
 
 	normalToLine, err := rect.NormalToLine(line)
 
 	if err != nil {
-		return Zero, err
+		return Zero(), err
 	}
 
 	return normalToLine.MultiplyByScalar(-1), nil
@@ -222,13 +222,13 @@ func (line *Line) NormalToRectangle(rect *Rectangle) (Vector, error) {
 // to the circle.
 func (rect *Rectangle) NormalToCircle(circle *Circle) (Vector, error) {
 	if circle == nil {
-		return Zero, fmt.Errorf("the circle is nil")
+		return Zero(), fmt.Errorf("the circle is nil")
 	}
 
 	normalToRect, err := circle.NormalToRectangle(rect)
 
 	if err != nil {
-		return Zero, err
+		return Zero(), err
 	}
 
 	return normalToRect.MultiplyByScalar(-1), nil
@@ -238,7 +238,7 @@ func (rect *Rectangle) NormalToCircle(circle *Circle) (Vector, error) {
 // and the line.
 func (rect *Rectangle) NormalToLine(line *Line) (Vector, error) {
 	if line == nil {
-		return Zero, fmt.Errorf("the line is nil")
+		return Zero(), fmt.Errorf("the line is nil")
 	}
 
 	lineAxisX := line.q.Subtract(line.Center()).Normalize()
@@ -265,7 +265,7 @@ func (rect *Rectangle) NormalToLine(line *Line) (Vector, error) {
 			rect.center.Add(rect.yAxis))
 
 		if err != nil {
-			return Zero, err
+			return Zero(), err
 		}
 
 		if sepLine.Orientation(line.Center()) < 0 {
@@ -277,7 +277,7 @@ func (rect *Rectangle) NormalToLine(line *Line) (Vector, error) {
 			rect.center.Add(rect.xAxis))
 
 		if err != nil {
-			return Zero, err
+			return Zero(), err
 		}
 
 		if sepLine.Orientation(line.Center()) > 0 {
@@ -289,7 +289,7 @@ func (rect *Rectangle) NormalToLine(line *Line) (Vector, error) {
 			line.Center().Add(lineAxisY))
 
 		if err != nil {
-			return Zero, err
+			return Zero(), err
 		}
 
 		if sepLine.Orientation(rect.center) > 0 {
@@ -301,7 +301,7 @@ func (rect *Rectangle) NormalToLine(line *Line) (Vector, error) {
 			line.Center().Add(lineAxisX))
 
 		if err != nil {
-			return Zero, err
+			return Zero(), err
 		}
 
 		if sepLine.Orientation(rect.center) < 0 {
@@ -316,7 +316,7 @@ func (rect *Rectangle) NormalToLine(line *Line) (Vector, error) {
 // the other rectangle.
 func (rect *Rectangle) NormalToRectangle(other *Rectangle) (Vector, error) {
 	if other == nil {
-		return Zero, fmt.Errorf("the rectangle is nil")
+		return Zero(), fmt.Errorf("the rectangle is nil")
 	}
 
 	// A vector from the center of rectangle A to the center of rectangle B.
@@ -350,7 +350,7 @@ func (rect *Rectangle) NormalToRectangle(other *Rectangle) (Vector, error) {
 			rect.center.Add(rect.yAxis))
 
 		if err != nil {
-			return Zero, err
+			return Zero(), err
 		}
 
 		if sepLine.Orientation(other.center) < 0 {
@@ -362,7 +362,7 @@ func (rect *Rectangle) NormalToRectangle(other *Rectangle) (Vector, error) {
 			rect.center.Add(rect.xAxis))
 
 		if err != nil {
-			return Zero, err
+			return Zero(), err
 		}
 
 		if sepLine.Orientation(other.center) > 0 {
@@ -374,7 +374,7 @@ func (rect *Rectangle) NormalToRectangle(other *Rectangle) (Vector, error) {
 			other.center.Add(other.yAxis))
 
 		if err != nil {
-			return Zero, err
+			return Zero(), err
 		}
 
 		if sepLine.Orientation(rect.center) > 0 {
@@ -386,7 +386,7 @@ func (rect *Rectangle) NormalToRectangle(other *Rectangle) (Vector, error) {
 			other.center.Add(other.xAxis))
 
 		if err != nil {
-			return Zero, err
+			return Zero(), err
 		}
 
 		if sepLine.Orientation(rect.center) < 0 {

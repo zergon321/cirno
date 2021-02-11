@@ -12,7 +12,7 @@ import (
 // Ray cannot hit against the shape within which it's located.
 func (space *Space) Raycast(origin, direction Vector, distance float64, mask int32) (Shape, Vector, error) {
 	if Sign(direction.X) == 0 && Sign(direction.Y) == 0 {
-		return nil, Zero, fmt.Errorf("the direction vector is zero")
+		return nil, Zero(), fmt.Errorf("the direction vector is Zero()")
 	}
 
 	if distance <= 0 {
@@ -23,7 +23,7 @@ func (space *Space) Raycast(origin, direction Vector, distance float64, mask int
 		direction.Normalize().MultiplyByScalar(distance)))
 
 	if err != nil {
-		return nil, Zero, err
+		return nil, Zero(), err
 	}
 
 	ray.SetMask(mask)
@@ -42,7 +42,7 @@ func (space *Space) Raycast(origin, direction Vector, distance float64, mask int
 		overlapped, err := node.boundary.collidesLine(ray)
 
 		if err != nil {
-			return nil, Zero, err
+			return nil, Zero(), err
 		}
 
 		if !overlapped {
@@ -55,14 +55,14 @@ func (space *Space) Raycast(origin, direction Vector, distance float64, mask int
 				raycastHit, err := ResolveCollision(ray, shape, space.useTags)
 
 				if err != nil {
-					return nil, Zero, err
+					return nil, Zero(), err
 				}
 
 				if raycastHit && !shape.ContainsPoint(ray.p) {
 					contacts, err := Contact(ray, shape)
 
 					if err != nil {
-						return nil, Zero, err
+						return nil, Zero(), err
 					}
 
 					for _, contact := range contacts {

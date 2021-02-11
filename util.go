@@ -47,19 +47,19 @@ func SquaredDistance(a, b Vector) float64 {
 // to detect the closest point until the shape collides other shapes.
 func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, intensity int, useTags bool) (Vector, float64, Shape, error) {
 	if shape == nil {
-		return Zero, -1, nil,
+		return Zero(), -1, nil,
 			fmt.Errorf("the shape being approximated is nil")
 	}
 
 	if shape == nil {
-		return Zero, -1, nil,
+		return Zero(), -1, nil,
 			fmt.Errorf("the set of shapes is nil")
 	}
 
 	var foundShape Shape
 
 	if intensity < 0 {
-		return Zero, 0, nil,
+		return Zero(), 0, nil,
 			fmt.Errorf("the value of intensity must be positive")
 	}
 
@@ -86,7 +86,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 				linesCollinear, err := line.CollinearTo(otherLine)
 
 				if intensity < 0 {
-					return Zero, 0, nil, err
+					return Zero(), 0, nil, err
 				}
 
 				if linesCollinear {
@@ -94,7 +94,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 					shouldCollide, err := line.ShouldCollide(otherLine)
 
 					if err != nil {
-						return Zero, 0, nil, err
+						return Zero(), 0, nil, err
 					}
 
 					if useTags && !shouldCollide {
@@ -108,7 +108,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 						prevPos, prevAngle, movement, turn, line, otherLine)
 
 					if err != nil {
-						return Zero, -1, nil, err
+						return Zero(), -1, nil, err
 					}
 
 					if linesWouldIntersect {
@@ -123,7 +123,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 			overlapped, err := ResolveCollision(shape, other, useTags)
 
 			if err != nil {
-				return Zero, -1, nil, err
+				return Zero(), -1, nil, err
 			}
 
 			if overlapped {
@@ -146,7 +146,7 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 	shape.SetAngle(originalAngle)
 
 	if math.IsNaN(prevPos.X) || math.IsNaN(prevPos.Y) {
-		return Zero, 0.0, nil, fmt.Errorf("couldn't approximate the shape")
+		return Zero(), 0.0, nil, fmt.Errorf("couldn't approximate the shape")
 	}
 
 	return prevPos, prevAngle, foundShape, nil

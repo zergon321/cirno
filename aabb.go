@@ -21,8 +21,8 @@ func (bb *aabb) toRectangle() *Rectangle {
 		center: bb.center(),
 		extents: NewVector((bb.max.X-bb.min.X)/2.0,
 			(bb.max.Y-bb.min.Y)/2.0),
-		xAxis: Right,
-		yAxis: Up,
+		xAxis: Right(),
+		yAxis: Up(),
 	}
 }
 
@@ -88,8 +88,8 @@ func (bb *aabb) collidesRectangle(rect *Rectangle) (bool, error) {
 		center: bb.center(),
 		extents: NewVector((bb.max.X-bb.min.X)/2.0,
 			(bb.max.Y-bb.min.Y)/2.0),
-		xAxis: Right,
-		yAxis: Up,
+		xAxis: Right(),
+		yAxis: Up(),
 	}
 	bbRect.treeNodes = []*quadTreeNode{}
 
