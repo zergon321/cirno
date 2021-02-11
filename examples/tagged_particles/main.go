@@ -56,16 +56,20 @@ func run() {
 	rand.Seed(time.Now().UnixNano())
 
 	space, err := cirno.NewSpace(5, 20, width*2, height*2,
-		cirno.Zero, cirno.NewVector(width, height), true)
+		cirno.Zero(), cirno.NewVector(width, height), true)
 	handleError(err)
 
 	particles := make([]*cirno.Circle, 0)
 
 	// Create borders.
-	borderWest := cirno.NewLine(cirno.NewVector(0, 0), cirno.NewVector(0, height))
-	borderSouth := cirno.NewLine(cirno.NewVector(0, 0), cirno.NewVector(width, 0))
-	borderNorth := cirno.NewLine(cirno.NewVector(0, height), cirno.NewVector(width, height))
-	borderEast := cirno.NewLine(cirno.NewVector(width, 0), cirno.NewVector(width, height))
+	borderWest, err := cirno.NewLine(cirno.NewVector(0, 0), cirno.NewVector(0, height))
+	handleError(err)
+	borderSouth, err := cirno.NewLine(cirno.NewVector(0, 0), cirno.NewVector(width, 0))
+	handleError(err)
+	borderNorth, err := cirno.NewLine(cirno.NewVector(0, height), cirno.NewVector(width, height))
+	handleError(err)
+	borderEast, err := cirno.NewLine(cirno.NewVector(width, 0), cirno.NewVector(width, height))
+	handleError(err)
 
 	// Borders shouldn't collide each other.
 	borderWest.SetIdentity(1)
@@ -96,7 +100,8 @@ func run() {
 			jDist := height / (numberOfParticles / 16)
 
 			position := cirno.NewVector(float64((i+1)*iDist), float64((j+1)*jDist)).MultiplyByScalar(0.8)
-			particle := cirno.NewCircle(position, float64(rand.Intn(3)+5))
+			particle, err := cirno.NewCircle(position, float64(rand.Intn(3)+5))
+			handleError(err)
 
 			if j%2 == 0 {
 				particle.SetIdentity(2)
@@ -107,7 +112,7 @@ func run() {
 			}
 
 			particles = append(particles, particle)
-			err := space.Add(particle)
+			err = space.Add(particle)
 			handleError(err)
 		}
 	}

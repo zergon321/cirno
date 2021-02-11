@@ -32,16 +32,22 @@ func run() {
 	handleError(err)
 
 	// Create new shapes.
-	circle := cirno.NewCircle(cirno.NewVector(140, 472.5), 67.5)
-	rect := cirno.NewRectangle(cirno.NewVector(150, 78.75), 220, 112.5, 0)
-	line := cirno.NewLine(cirno.NewVector(480, 540), cirno.NewVector(660, 405))
-	cube := cirno.NewRectangle(cirno.NewVector(600, 112.5), 135, 135, 0)
-	rhombus := cirno.NewRectangle(cirno.NewVector(360, 292.5), 90, 90, 45)
-	littleCircle := cirno.NewCircle(cirno.NewVector(640, 540), 45)
+	circle, err := cirno.NewCircle(cirno.NewVector(140, 472.5), 67.5)
+	handleError(err)
+	rect, err := cirno.NewRectangle(cirno.NewVector(150, 78.75), 220, 112.5, 0)
+	handleError(err)
+	line, err := cirno.NewLine(cirno.NewVector(480, 540), cirno.NewVector(660, 405))
+	handleError(err)
+	cube, err := cirno.NewRectangle(cirno.NewVector(600, 112.5), 135, 135, 0)
+	handleError(err)
+	rhombus, err := cirno.NewRectangle(cirno.NewVector(360, 292.5), 90, 90, 45)
+	handleError(err)
+	littleCircle, err := cirno.NewCircle(cirno.NewVector(640, 540), 45)
+	handleError(err)
 
 	// Create a new space.
 	space, err := cirno.NewSpace(1, 10, width*2, height*2,
-		cirno.Zero, cirno.NewVector(width, height), false)
+		cirno.Zero(), cirno.NewVector(width, height), false)
 	handleError(err)
 	// Fill the space with the shapes.
 	err = space.Add(circle, rect, line, cube, rhombus, littleCircle)
@@ -88,13 +94,15 @@ func run() {
 		}
 
 		// If the shape is hit by the ray, its color is set to red.
-		hitShape, hitPoint := space.Raycast(origin, direction, 0, 0)
+		hitShape, hitPoint, err := space.Raycast(origin, direction, 0, 0)
+		handleError(err)
 
 		if hitShape != nil {
 			hitShape.SetData(colornames.Red)
 		}
 
-		ray := cirno.NewLine(origin, origin.Add(direction.MultiplyByScalar(distance)))
+		ray, err := cirno.NewLine(origin, origin.Add(direction.MultiplyByScalar(distance)))
+		handleError(err)
 
 		// Rendering.
 		imd.Clear()

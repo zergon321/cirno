@@ -76,14 +76,18 @@ func run() {
 
 	// Setup physics.
 	space, err := cirno.NewSpace(5, 20, width*2, height*2,
-		cirno.Zero, cirno.NewVector(width, height), false)
+		cirno.Zero(), cirno.NewVector(width, height), false)
 	handleError(err)
 
 	// Create borders.
-	borderWest := cirno.NewLine(cirno.NewVector(0, 0), cirno.NewVector(0, height))
-	borderSouth := cirno.NewLine(cirno.NewVector(0, 0), cirno.NewVector(width, 0))
-	borderNorth := cirno.NewLine(cirno.NewVector(0, height), cirno.NewVector(width, height))
-	borderEast := cirno.NewLine(cirno.NewVector(width, 0), cirno.NewVector(width, height))
+	borderWest, err := cirno.NewLine(cirno.NewVector(0, 0), cirno.NewVector(0, height))
+	handleError(err)
+	borderSouth, err := cirno.NewLine(cirno.NewVector(0, 0), cirno.NewVector(width, 0))
+	handleError(err)
+	borderNorth, err := cirno.NewLine(cirno.NewVector(0, height), cirno.NewVector(width, height))
+	handleError(err)
+	borderEast, err := cirno.NewLine(cirno.NewVector(width, 0), cirno.NewVector(width, height))
+	handleError(err)
 
 	// Add the borders in the space.
 	err = space.Add(borderNorth)
@@ -104,43 +108,65 @@ func run() {
 	handleError(err)
 
 	// Setup objects.
+	var shape cirno.Shape
+
+	shape, err = cirno.NewCircle(cirno.NewVector(1024, 256), 30)
+	handleError(err)
 	circle := &object{
-		shape:  cirno.NewCircle(cirno.NewVector(1024, 256), 30),
+		shape:  shape,
 		sprite: pixel.NewSprite(circlePic, pixel.R(0, 0, 45, 45)),
 		transform: pixel.IM.Scaled(pixel.ZV, 60.0/45.0).
 			Moved(pixel.V(1024, 256)),
 	}
+
+	shape, err = cirno.NewCircle(cirno.NewVector(420, 380), 50)
+	handleError(err)
 	otherCircle := &object{
-		shape:  cirno.NewCircle(cirno.NewVector(420, 380), 50),
+		shape:  shape,
 		sprite: pixel.NewSprite(circlePic, pixel.R(0, 0, 45, 45)),
 		transform: pixel.IM.Scaled(pixel.ZV, 100.0/45.0).
 			Moved(pixel.V(420, 380)),
 	}
+
+	shape, err = cirno.NewRectangle(cirno.NewVector(128, 256), 100, 100, 60)
+	handleError(err)
 	cube := &object{
-		shape:  cirno.NewRectangle(cirno.NewVector(128, 256), 100, 100, 60),
+		shape:  shape,
 		sprite: pixel.NewSprite(cubePic, pixel.R(0, 0, 32, 32)),
 		transform: pixel.IM.Scaled(pixel.ZV, 100.0/32.0).
 			Rotated(pixel.ZV, 60*cirno.DegToRad).
 			Moved(pixel.V(128, 256)),
 	}
+
+	shape, err = cirno.NewRectangle(cirno.NewVector(1024, 512), 100, 100, 0)
+	handleError(err)
 	otherCube := &object{
-		shape:  cirno.NewRectangle(cirno.NewVector(1024, 512), 100, 100, 0),
+		shape:  shape,
 		sprite: pixel.NewSprite(cubePic, pixel.R(0, 0, 32, 32)),
 		transform: pixel.IM.Scaled(pixel.ZV, 100.0/32.0).
 			Moved(pixel.V(1024, 512)),
 	}
+
+	shape, err = cirno.NewRectangle(cirno.NewVector(640, 520), 150, 50, 60.0)
+	handleError(err)
 	rect := &object{
-		shape:  cirno.NewRectangle(cirno.NewVector(640, 520), 150, 50, 60.0),
+		shape:  shape,
 		sprite: pixel.NewSprite(rectPic, pixel.R(0, 0, 32, 44)),
 		transform: pixel.IM.ScaledXY(pixel.ZV, pixel.V(150.0/32.0, 50.0/44.0)).
 			Rotated(pixel.ZV, 60*cirno.DegToRad).
 			Moved(pixel.V(640, 520)),
 	}
+
+	shape, err = cirno.NewLine(cirno.NewVector(480, 520), cirno.NewVector(480, 370))
+	handleError(err)
 	line := &object{
-		shape: cirno.NewLine(cirno.NewVector(480, 520), cirno.NewVector(480, 370)),
+		shape: shape,
 	}
+
+	shape, err = cirno.NewLine(cirno.NewVector(720, 450), cirno.NewVector(720, 280))
+	handleError(err)
 	otherLine := &object{
-		shape: cirno.NewLine(cirno.NewVector(720, 450), cirno.NewVector(720, 280)),
+		shape: shape,
 	}
 
 	line.shape.(*cirno.Line).Rotate(60)
@@ -200,23 +226,23 @@ func run() {
 		win.Clear(colornames.White)
 
 		// Motion control.
-		movement := cirno.Zero
+		movement := cirno.Zero()
 		turn := 0.0
 
 		if win.Pressed(pixelgl.KeyUp) {
-			movement = movement.Add(cirno.Up)
+			movement = movement.Add(cirno.Up())
 		}
 
 		if win.Pressed(pixelgl.KeyDown) {
-			movement = movement.Add(cirno.Down)
+			movement = movement.Add(cirno.Down())
 		}
 
 		if win.Pressed(pixelgl.KeyLeft) {
-			movement = movement.Add(cirno.Left)
+			movement = movement.Add(cirno.Left())
 		}
 
 		if win.Pressed(pixelgl.KeyRight) {
-			movement = movement.Add(cirno.Right)
+			movement = movement.Add(cirno.Right())
 		}
 
 		if win.Pressed(pixelgl.KeyW) {
@@ -228,7 +254,7 @@ func run() {
 		}
 
 		// Move the controllable shape.
-		if movement != cirno.Zero || turn != 0 {
+		if movement != cirno.Zero() || turn != 0 {
 			movement = movement.MultiplyByScalar(moveSpeed * deltaTime)
 			turn = turn * turnSpeed * deltaTime
 
@@ -302,7 +328,11 @@ func run() {
 			fmt.Println("Position:", obj.shape.Center())
 			fmt.Println("Angle:", obj.shape.Angle())
 
-			if cirno.ResolveCollision(line.shape, otherLine.shape, false) {
+			overlap, err := cirno.ResolveCollision(
+				line.shape, otherLine.shape, false)
+			handleError(err)
+
+			if overlap {
 				fmt.Println("Lol")
 			}
 		}

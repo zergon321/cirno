@@ -51,24 +51,31 @@ func run() {
 	handleError(err)
 
 	// Setup physics.
-	circleBig := cirno.NewCircle(cirno.NewVector(350, 250), 50)
+	circleBig, err := cirno.NewCircle(cirno.NewVector(350, 250), 50)
+	handleError(err)
 	circleBig.SetData(colors.Red)
-	circleLittle := cirno.NewCircle(cirno.NewVector(1000, 600), 20)
+	circleLittle, err := cirno.NewCircle(cirno.NewVector(1000, 600), 20)
+	handleError(err)
 	circleLittle.SetData(colors.Darkseagreen)
-	circleTemp := cirno.NewCircle(cirno.NewVector(470, 250), 50)
+	circleTemp, err := cirno.NewCircle(cirno.NewVector(470, 250), 50)
+	handleError(err)
 	circleTemp.SetData(colors.Coral)
-	line := cirno.NewLine(cirno.NewVector(800, 200), cirno.NewVector(1200, 400))
+	line, err := cirno.NewLine(cirno.NewVector(800, 200), cirno.NewVector(1200, 400))
+	handleError(err)
 	line.SetData(colors.Darkseagreen)
-	lineCtrl := cirno.NewLine(cirno.NewVector(750, 500), cirno.NewVector(900, 600))
+	lineCtrl, err := cirno.NewLine(cirno.NewVector(750, 500), cirno.NewVector(900, 600))
+	handleError(err)
 	lineCtrl.SetData(colors.Chocolate)
-	rect := cirno.NewRectangle(cirno.NewVector(200, 550), 120, 60, 60)
+	rect, err := cirno.NewRectangle(cirno.NewVector(200, 550), 120, 60, 60)
+	handleError(err)
 	rect.SetData(colors.Crimson)
-	rectStatic := cirno.NewRectangle(cirno.NewVector(540, 460), 120, 60, 30.0)
+	rectStatic, err := cirno.NewRectangle(cirno.NewVector(540, 460), 120, 60, 30.0)
+	handleError(err)
 	rectStatic.SetData(colors.Darkseagreen)
 	line.SetAngle(60)
 
 	space, err := cirno.NewSpace(1, 10, width*2, height*2,
-		cirno.Zero, cirno.NewVector(width, height), false)
+		cirno.Zero(), cirno.NewVector(width, height), false)
 	handleError(err)
 	err = space.Add(circleBig, circleLittle, line, circleTemp,
 		lineCtrl, rect, rectStatic)
@@ -103,22 +110,22 @@ func run() {
 		win.Clear(colors.White)
 
 		// Movement.
-		movement := cirno.Zero
+		movement := cirno.Zero()
 
 		if win.Pressed(pixelgl.KeyUp) {
-			movement = movement.Add(cirno.Up)
+			movement = movement.Add(cirno.Up())
 		}
 
 		if win.Pressed(pixelgl.KeyDown) {
-			movement = movement.Add(cirno.Down)
+			movement = movement.Add(cirno.Down())
 		}
 
 		if win.Pressed(pixelgl.KeyLeft) {
-			movement = movement.Add(cirno.Left)
+			movement = movement.Add(cirno.Left())
 		}
 
 		if win.Pressed(pixelgl.KeyRight) {
-			movement = movement.Add(cirno.Right)
+			movement = movement.Add(cirno.Right())
 		}
 
 		// Turn.
@@ -139,12 +146,13 @@ func run() {
 
 		// Get all the contacts with other shapes.
 		for shape := range shapes {
-			shapeContacts := cirno.Contact(ctrlShape, shape)
+			shapeContacts, err := cirno.Contact(ctrlShape, shape)
+			handleError(err)
 			contacts = append(contacts, shapeContacts...)
 		}
 
 		// Move and turn the shape.
-		if movement != cirno.Zero || turn != 0 {
+		if movement != cirno.Zero() || turn != 0 {
 			movement = movement.MultiplyByScalar(moveSpeed * deltaTime)
 			turn *= turnSpeed * deltaTime
 

@@ -56,8 +56,12 @@ func strToShape(str []string) (cirno.Shape, error) {
 			return nil, err
 		}
 
-		circle := cirno.NewCircle(cirno.
+		circle, err := cirno.NewCircle(cirno.
 			NewVector(float64(x), float64(y)), float64(radius))
+
+		if err != nil {
+			return nil, err
+		}
 
 		return circle, nil
 
@@ -86,8 +90,12 @@ func strToShape(str []string) (cirno.Shape, error) {
 			return nil, err
 		}
 
-		line := cirno.NewLine(cirno.NewVector(float64(x1), float64(y1)),
+		line, err := cirno.NewLine(cirno.NewVector(float64(x1), float64(y1)),
 			cirno.NewVector(float64(x2), float64(y2)))
+
+		if err != nil {
+			return nil, err
+		}
 
 		return line, nil
 
@@ -122,8 +130,12 @@ func strToShape(str []string) (cirno.Shape, error) {
 			return nil, err
 		}
 
-		rectangle := cirno.NewRectangle(cirno.
+		rectangle, err := cirno.NewRectangle(cirno.
 			NewVector(float64(x), float64(y)), float64(width), float64(height), float64(angle))
+
+		if err != nil {
+			return nil, err
+		}
 
 		return rectangle, nil
 
@@ -163,7 +175,8 @@ func main() {
 		// Test the obtained shapes for collision
 		// and compare results.
 		test := parts[0] + ", " + parts[1]
-		actual := cirno.ResolveCollision(oneShape, otherShape, false)
+		actual, err := cirno.ResolveCollision(oneShape, otherShape, false)
+		handleError(err)
 		result := expected == actual
 
 		tests = append(tests, test)

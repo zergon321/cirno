@@ -130,20 +130,28 @@ func run() {
 	//bulletBatch := pixel.NewBatch(new(pixel.TrianglesData), projectileSheet)
 
 	// Create platforms.
+	lowerRect, err := cirno.NewRectangle(cirno.NewVector(640, 40), 384, 32, 0)
+	handleError(err)
 	lowerPlatform := &platform{
-		rect:   cirno.NewRectangle(cirno.NewVector(640, 40), 384, 32, 0),
+		rect:   lowerRect,
 		sprite: platformSprite,
 		transform: pixel.IM.ScaledXY(pixel.ZV, pixel.V(3, 1)).
 			Moved(pixel.V(640, 40)),
 	}
+
+	middleRect, err := cirno.NewRectangle(cirno.NewVector(320, 220), 384, 32, 0)
+	handleError(err)
 	middlePlatform := &platform{
-		rect:   cirno.NewRectangle(cirno.NewVector(320, 220), 384, 32, 0),
+		rect:   middleRect,
 		sprite: platformSprite,
 		transform: pixel.IM.ScaledXY(pixel.ZV, pixel.V(3, 1)).
 			Moved(pixel.V(320, 220)),
 	}
+
+	higherRect, err := cirno.NewRectangle(cirno.NewVector(960, 400), 384, 32, 0)
+	handleError(err)
 	higherPlatform := &platform{
-		rect:   cirno.NewRectangle(cirno.NewVector(960, 400), 384, 32, 0),
+		rect:   higherRect,
 		sprite: platformSprite,
 		transform: pixel.IM.ScaledXY(pixel.ZV, pixel.V(3, 1)).
 			Moved(pixel.V(960, 400)),
@@ -157,10 +165,14 @@ func run() {
 	middlePlatform.rect.SetData(middlePlatform)
 	higherPlatform.rect.SetData(higherPlatform)
 
+	lowerBeholderRect, err := cirno.NewRectangle(cirno.NewVector(320, 316), 64.5, 157.5, 0)
+	handleError(err)
+	lowerBeholderCircle, err := cirno.NewCircle(cirno.NewVector(304, 378.75), 16)
+	handleError(err)
 	// Create beholders.
 	lowerBeholder := &beholder{
-		rect:           cirno.NewRectangle(cirno.NewVector(320, 316), 64.5, 157.5, 0),
-		hitCircle:      cirno.NewCircle(cirno.NewVector(304, 378.75), 16),
+		rect:           lowerBeholderRect,
+		hitCircle:      lowerBeholderCircle,
 		sprite:         beholderLeftSprite,
 		anim:           []*pixel.Sprite{beholderLeftSprite, beholderRightSprite},
 		bulletSprite:   bloodBulletSprite,
@@ -169,13 +181,18 @@ func run() {
 		bulletTimer:    nil,
 		spawnedBullets: make([]*bloodBullet, 0),
 		speed:          250,
-		direction:      cirno.Left,
+		direction:      cirno.Left(),
 		transform:      pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(320, 316)),
 		dead:           false,
 	}
+
+	higherBeholderRect, err := cirno.NewRectangle(cirno.NewVector(960, 496), 64.5, 157.5, 0)
+	handleError(err)
+	higherBeholderCircle, err := cirno.NewCircle(cirno.NewVector(976, 558.75), 16)
+	handleError(err)
 	higherBeholder := &beholder{
-		rect:           cirno.NewRectangle(cirno.NewVector(960, 496), 64.5, 157.5, 0),
-		hitCircle:      cirno.NewCircle(cirno.NewVector(976, 558.75), 16),
+		rect:           higherBeholderRect,
+		hitCircle:      higherBeholderCircle,
 		sprite:         beholderRightSprite,
 		anim:           []*pixel.Sprite{beholderLeftSprite, beholderRightSprite},
 		bulletSprite:   bloodBulletSprite,
@@ -184,7 +201,7 @@ func run() {
 		bulletTimer:    nil,
 		spawnedBullets: make([]*bloodBullet, 0),
 		speed:          300,
-		direction:      cirno.Right,
+		direction:      cirno.Right(),
 		transform:      pixel.IM.Scaled(pixel.ZV, 0.5).Moved(pixel.V(960, 496)),
 		dead:           false,
 	}
@@ -203,16 +220,18 @@ func run() {
 	higherBeholder.hitCircle.SetData(higherBeholder)
 
 	// Create hero.
+	playerHitbox, err := cirno.NewRectangle(cirno.NewVector(640, 121), 64, 128, 0)
+	handleError(err)
 	hero := &player{
 		speed:            500,
 		jumpAcceleration: 80,
 		verticalSpeed:    gravity,
 		terminalSpeed:    gravity,
-		aim:              cirno.Left,
+		aim:              cirno.Left(),
 		bulletSprite:     electroBulletSprite,
 		bulletSpeed:      200,
 		spawnedBullets:   make([]*electroBullet, 0),
-		rect:             cirno.NewRectangle(cirno.NewVector(640, 121), 64, 128, 0),
+		rect:             playerHitbox,
 		sprite:           testmanLeftSprite,
 		animation:        []*pixel.Sprite{testmanLeftSprite, testmanRightSprite},
 		transform:        pixel.IM.Scaled(pixel.V(0, 0), 2).Moved(pixel.V(640, 121)),
@@ -225,7 +244,7 @@ func run() {
 
 	// Create a new collision space.
 	space, err := cirno.NewSpace(5, 20, width*4, height*4,
-		cirno.Zero, cirno.NewVector(width, height), true)
+		cirno.Zero(), cirno.NewVector(width, height), true)
 	handleError(err)
 	// Add hit shapes to the space.
 	err = space.Add(lowerPlatform.rect, middlePlatform.rect, higherPlatform.rect,

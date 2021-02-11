@@ -29,28 +29,41 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 		br.rect.Center().Y)
 	rightRayOrigin := cirno.NewVector(br.rect.Center().X+br.rect.Width()/2,
 		br.rect.Center().Y)
-	leftShape, _ := space.Raycast(leftRayOrigin, cirno.Down, br.rect.Height()/2+4,
+	leftShape, _, err := space.Raycast(leftRayOrigin, cirno.Down(), br.rect.Height()/2+4,
 		br.rect.GetMask())
-	rightShape, _ := space.Raycast(rightRayOrigin, cirno.Down, br.rect.Height()/2+4,
+
+	if err != nil {
+		return err
+	}
+
+	rightShape, _, err := space.Raycast(rightRayOrigin, cirno.Down(), br.rect.Height()/2+4,
 		br.rect.GetMask())
+
+	if err != nil {
+		return err
+	}
 
 	// Change movement direction
 	// and hit circle position.
 	if leftShape == nil {
-		br.direction = cirno.Right
+		br.direction = cirno.Right()
 		br.sprite = br.anim[1]
 	} else if rightShape == nil {
-		br.direction = cirno.Left
+		br.direction = cirno.Left()
 		br.sprite = br.anim[0]
 	}
 
 	movement := br.direction.MultiplyByScalar(br.speed * deltaTime)
 
 	// Detect player and stop if player detected.
-	player, _ := space.Raycast(br.rect.Center(), br.direction, 384, playerID)
+	player, _, err := space.Raycast(br.rect.Center(), br.direction, 384, playerID)
+
+	if err != nil {
+		return err
+	}
 
 	if player != nil {
-		movement = cirno.Zero
+		movement = cirno.Zero()
 
 		// Shoot at the player if he is detected.
 		if br.bulletTimer == nil {
@@ -58,12 +71,18 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 			bulletPos := br.rect.Center().
 				Add(br.direction.MultiplyByScalar(br.rect.Width() / 4)).
 				Add(br.direction.MultiplyByScalar(br.bulletSprite.Frame().W() / 4))
+			bulletHitLine, err := cirno.NewLine(
+				bulletPos.Add(cirno.Left().MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
+				bulletPos.Add(cirno.Right().MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
+			)
+
+			if err != nil {
+				return err
+			}
+
 			bullet := &bloodBullet{
-				spawner: br,
-				hitLine: cirno.NewLine(
-					bulletPos.Add(cirno.Left.MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
-					bulletPos.Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
-				),
+				spawner:   br,
+				hitLine:   bulletHitLine,
 				sprite:    br.bulletSprite,
 				direction: br.direction,
 				speed:     br.bulletSpeed,
@@ -75,7 +94,7 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 			bullet.hitLine.SetIdentity(bloodBulletID)
 			bullet.hitLine.SetMask(playerID)
 
-			err := space.Add(bullet.hitLine)
+			err = space.Add(bullet.hitLine)
 
 			if err != nil {
 				return err
@@ -92,12 +111,18 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 				bulletPos := br.rect.Center().
 					Add(br.direction.MultiplyByScalar(br.rect.Width() / 4)).
 					Add(br.direction.MultiplyByScalar(br.bulletSprite.Frame().W() / 4))
+				bulletHitLine, err := cirno.NewLine(
+					bulletPos.Add(cirno.Left().MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
+					bulletPos.Add(cirno.Right().MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
+				)
+
+				if err != nil {
+					return err
+				}
+
 				bullet := &bloodBullet{
-					spawner: br,
-					hitLine: cirno.NewLine(
-						bulletPos.Add(cirno.Left.MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
-						bulletPos.Add(cirno.Right.MultiplyByScalar(br.bulletSprite.Frame().W()/4)),
-					),
+					spawner:   br,
+					hitLine:   bulletHitLine,
 					sprite:    br.bulletSprite,
 					direction: br.direction,
 					speed:     br.bulletSpeed,
@@ -109,7 +134,7 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 				bullet.hitLine.SetIdentity(bloodBulletID)
 				bullet.hitLine.SetMask(playerID)
 
-				err := space.Add(bullet.hitLine)
+				err = space.Add(bullet.hitLine)
 
 				if err != nil {
 					return err
@@ -126,7 +151,7 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 		br.bulletTimer = nil
 	}
 
-	if movement != cirno.Zero {
+	if movement != cirno.Zero() {
 		// Move rect.
 		prev := br.rect.Center()
 		br.rect.Move(movement)
@@ -145,14 +170,14 @@ func (br *beholder) update(space *cirno.Space, deltaTime float64) error {
 	hitCirclePos := cirno.NewVector(br.rect.Center().X,
 		br.rect.Center().Y+br.rect.Height()/2-br.hitCircle.Radius())
 
-	if br.direction == cirno.Right {
+	if br.direction == cirno.Right() {
 		hitCirclePos.X += br.hitCircle.Radius()
-	} else if br.direction == cirno.Left {
+	} else if br.direction == cirno.Left() {
 		hitCirclePos.X -= br.hitCircle.Radius()
 	}
 
 	br.hitCircle.SetPosition(hitCirclePos)
-	_, err := space.Update(br.hitCircle)
+	_, err = space.Update(br.hitCircle)
 
 	if err != nil {
 		return err

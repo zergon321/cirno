@@ -23,19 +23,19 @@ type player struct {
 }
 
 func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float64) error {
-	movement := cirno.Zero
+	movement := cirno.Zero()
 
 	// Read movement inputs to change aim
 	// and animation.
 	if win.Pressed(pixelgl.KeyLeft) {
 		movement.X--
-		p.aim = cirno.Left
+		p.aim = cirno.Left()
 		p.sprite = p.animation[1]
 	}
 
 	if win.Pressed(pixelgl.KeyRight) {
 		movement.X++
-		p.aim = cirno.Right
+		p.aim = cirno.Right()
 		p.sprite = p.animation[0]
 	}
 
@@ -44,9 +44,15 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		bulletPos := p.rect.Center().
 			Add(p.aim.MultiplyByScalar(p.rect.Width() / 4)).
 			Add(p.aim.MultiplyByScalar(p.bulletSprite.Frame().W() / 4))
+		bulletHitCircle, err := cirno.NewCircle(bulletPos, p.bulletSprite.Frame().W()/4)
+
+		if err != nil {
+			return err
+		}
+
 		bullet := &electroBullet{
 			spawner:   p,
-			hitCircle: cirno.NewCircle(bulletPos, p.bulletSprite.Frame().W()/4),
+			hitCircle: bulletHitCircle,
 			sprite:    p.bulletSprite,
 			direction: p.aim,
 			speed:     p.bulletSpeed,
@@ -58,7 +64,7 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		bullet.hitCircle.SetIdentity(electroBulletID)
 		bullet.hitCircle.SetMask(beholderEyeID)
 
-		err := space.Add(bullet.hitCircle)
+		err = space.Add(bullet.hitCircle)
 
 		if err != nil {
 			return err
@@ -72,10 +78,20 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 		p.rect.Center().Y)
 	rightRayOrigin := cirno.NewVector(p.rect.Center().X+p.rect.Width()/2,
 		p.rect.Center().Y)
-	leftShape, _ := space.Raycast(leftRayOrigin, cirno.Down,
+	leftShape, _, err := space.Raycast(leftRayOrigin, cirno.Down(),
 		p.rect.Height()/2+4, p.rect.GetMask())
-	rightShape, _ := space.Raycast(rightRayOrigin, cirno.Down,
+
+	if err != nil {
+		return err
+	}
+
+	rightShape, _, err := space.Raycast(rightRayOrigin, cirno.Down(),
 		p.rect.Height()/2+4, p.rect.GetMask())
+
+	if err != nil {
+		return err
+	}
+
 	grounded := leftShape != nil || rightShape != nil
 
 	// Compute vertical speed.
@@ -97,7 +113,7 @@ func (p *player) update(win *pixelgl.Window, space *cirno.Space, deltaTime float
 	movement.X *= p.speed * deltaTime
 	movement.Y = p.verticalSpeed
 
-	if movement != cirno.Zero {
+	if movement != cirno.Zero() {
 		// Update player sprite.
 		if movement.X > 0 {
 			p.sprite = p.animation[1]

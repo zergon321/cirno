@@ -32,7 +32,7 @@ func run() {
 
 	// Create a new collision space.
 	space, err := cirno.NewSpace(5, 70, width*2, height*2,
-		cirno.Zero, cirno.NewVector(width, height), false)
+		cirno.Zero(), cirno.NewVector(width, height), false)
 	handleError(err)
 	rebuildTimer := time.Tick(5 * time.Second)
 	// To prevent flickering and preserve the rendering
@@ -43,9 +43,10 @@ func run() {
 	rand.Seed(time.Now().UTC().UnixNano())
 
 	for i := 0; i < numberOfShapes; i++ {
-		rectangle := cirno.NewRectangle(
+		rectangle, err := cirno.NewRectangle(
 			cirno.NewVector(float64(rand.Int31n(width)), float64(rand.Int31n(height))),
 			float64(rand.Int31n(20)+20), float64(rand.Int31n(10)+10), float64(rand.Int31n(180)))
+		handleError(err)
 		rectangle.SetData(color.RGBA{
 			R: uint8(rand.Int31n(256)),
 			G: uint8(rand.Int31n(256)),

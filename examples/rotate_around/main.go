@@ -49,19 +49,22 @@ func run() {
 
 	switch controlledShape {
 	case "line":
-		object = cirno.NewLine(
+		object, err = cirno.NewLine(
 			base.Add(cirno.NewVector(40, 0)),
 			base.Add(cirno.NewVector(90, 50)),
 		)
+		handleError(err)
 
 	case "rectangle":
-		object = cirno.NewRectangle(
+		object, err = cirno.NewRectangle(
 			base.Add(cirno.NewVector(60, 0)),
 			40, 20, 0.0)
+		handleError(err)
 
 	case "circle":
-		object = cirno.NewCircle(
+		object, err = cirno.NewCircle(
 			base.Add(cirno.NewVector(60, 0)), 20)
+		handleError(err)
 
 	default:
 		handleError(fmt.Errorf("unknown argument: %s",
