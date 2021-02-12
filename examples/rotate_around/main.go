@@ -40,6 +40,7 @@ func run() {
 	cfg := pixelgl.WindowConfig{
 		Title:  "Cirno demo",
 		Bounds: pixel.R(0, 0, width, height),
+		VSync:  vsync,
 	}
 	win, err := pixelgl.NewWindow(cfg)
 	handleError(err)
