@@ -200,16 +200,13 @@ func linesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vecto
 	otherLine.SetPosition(otherTmpPos)
 	otherLine.SetAngle(otherTmpAngle)
 
-	pp, err := NewLine(movedP, otherLine.p)
-
-	if err != nil {
-		return false, err
+	pp := &Line{
+		p: movedP,
+		q: otherLine.p,
 	}
-
-	qq, err := NewLine(movedQ, otherLine.q)
-
-	if err != nil {
-		return false, err
+	qq := &Line{
+		p: movedQ,
+		q: otherLine.q,
 	}
 
 	ppIntersects, err := IntersectionLineToLine(pp, line)
@@ -232,16 +229,13 @@ func linesWouldCollide(originalPos Vector, originalAngle float64, moveDiff Vecto
 	line.SetPosition(tmpPos)
 	line.SetAngle(tmpAngle)
 
-	pp, err = NewLine(origP, line.p)
-
-	if err != nil {
-		return false, err
+	pp = &Line{
+		p: origP,
+		q: line.p,
 	}
-
-	qq, err = NewLine(origQ, line.q)
-
-	if err != nil {
-		return false, err
+	qq = &Line{
+		p: origQ,
+		q: line.q,
 	}
 
 	ppIntersects, err = IntersectionLineToLine(pp, otherLine)

@@ -148,7 +148,10 @@ func (l *Line) SquaredLength() float64 {
 
 // ContainsPoint detects if the point lies on the line.
 func (l *Line) ContainsPoint(point Vector) bool {
-	lTmp, _ := NewLine(Zero(), l.q.Subtract(l.p))
+	lTmp := &Line{
+		p: Zero(),
+		q: l.q.Subtract(l.p),
+	}
 	pTmp := point.Subtract(l.p)
 	r := Cross(lTmp.q, pTmp)
 	min, max := l.GetBoundingBox()
