@@ -31,7 +31,7 @@ func run() {
 	handleError(err)
 
 	// Create a new collision space.
-	space, err := cirno.NewSpace(5, 70, width*2, height*2,
+	space, err := cirno.NewSpace(5, 10, width*2, height*2,
 		cirno.Zero(), cirno.NewVector(width, height), false)
 	handleError(err)
 	rebuildTimer := time.Tick(5 * time.Second)
