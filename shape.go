@@ -4,6 +4,7 @@ import "fmt"
 
 // Shape represents a shape in the space.
 type Shape interface {
+	// Common methods.
 	TypeName() string
 	Center() Vector
 	Angle() float64
@@ -17,20 +18,20 @@ type Shape interface {
 	SetAngle(float64) float64
 	SetAngleRadians(float64) float64
 	ContainsPoint(Vector) bool
+	NormalTo(Shape) (Vector, error)
 
+	// Tag-related methods.
 	GetIdentity() int32
 	SetIdentity(int32)
-
 	GetMask() int32
 	SetMask(int32)
-
 	ShouldCollide(Shape) (bool, error)
 
+	// Data-related methods.
 	Data() interface{}
 	SetData(data interface{})
 
-	NormalTo(Shape) (Vector, error)
-
+	// Domain-related methods.
 	nodes() []*quadTreeNode
 	addNodes(...*quadTreeNode)
 	containsNode(*quadTreeNode) bool
