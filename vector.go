@@ -1,6 +1,7 @@
 package cirno
 
 import (
+	"fmt"
 	"math"
 )
 
@@ -103,8 +104,14 @@ func (v Vector) RotateAroundRadians(angle float64, base Vector) Vector {
 
 // CollinearTo indicates if the given vector is collinear to the
 // other vector.
-func (v Vector) CollinearTo(other Vector) bool {
-	return AdjustAngle(Angle(v, other)) < CollinearityThreshold
+func (v Vector) CollinearTo(other Vector) (bool, error) {
+	angle, err := Angle(v, other)
+
+	if err != nil {
+		return false, err
+	}
+
+	return AdjustAngle(angle) < CollinearityThreshold, nil
 }
 
 // Project returns vector v projected onto the axis.
@@ -114,14 +121,16 @@ func (v Vector) Project(axis Vector) Vector {
 	return axis.MultiplyByScalar(factor)
 }
 
-// ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0, если
-// обе компоненты вектора равны 0.
-
 // Normalize returns a normalized vector with magnitude of 1.
-func (v Vector) Normalize() Vector {
+func (v Vector) Normalize() (Vector, error) {
+	if v.X < Epsilon && v.Y < Epsilon {
+		return Zero(),
+			fmt.Errorf("tried to normalize zero vector")
+	}
+
 	length := v.Magnitude()
 
-	return NewVector(v.X/length, v.Y/length)
+	return NewVector(v.X/length, v.Y/length), nil
 }
 
 // ApproximatelyEqual returns true if the vector is
@@ -143,16 +152,27 @@ func Cross(a, b Vector) float64 {
 }
 
 // Angle returns the angle between two vectors (in degrees).
-func Angle(a, b Vector) float64 {
-	return AngleRadians(a, b) * RadToDeg
+func Angle(a, b Vector) (float64, error) {
+	angle, err := AngleRadians(a, b)
+
+	if err != nil {
+		return math.NaN(), err
+	}
+
+	return angle * RadToDeg, nil
 }
 
-// ОШИБКА ВЫЧИСЛЕНИЯ: возможно деление на 0, если
-// длина одного из векторов равна 0.
-
 // AngleRadians returns the angle between two vectors (in radians).
-func AngleRadians(a, b Vector) float64 {
-	cosine := Dot(a, b) / (a.Magnitude() * b.Magnitude())
+func AngleRadians(a, b Vector) (float64, error) {
+	magA := a.Magnitude()
+	magB := b.Magnitude()
+
+	if magA < Epsilon || magB < Epsilon {
+		return math.NaN(),
+			fmt.Errorf("one of the vectors is zero")
+	}
+
+	cosine := Dot(a, b) / (magA * magB)
 
 	if cosine > 1.0 {
 		cosine = 1.0
@@ -160,7 +180,7 @@ func AngleRadians(a, b Vector) float64 {
 		cosine = -1.0
 	}
 
-	return math.Acos(cosine)
+	return math.Acos(cosine), nil
 }
 
 // PerpendicularClockwise returns a new vector

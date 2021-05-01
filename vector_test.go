@@ -50,8 +50,14 @@ func TestVectorProject(t *testing.T) {
 func TestVectorNormalize(t *testing.T) {
 	v := cirno.NewVector(22, -14)
 
-	assert.Equal(t, math.Ceil(v.Normalize().Magnitude()), 1.0)
-	assert.Equal(t, cirno.Angle(v, v.Normalize()), 0.0)
+	n, err := v.Normalize()
+	assert.Nil(t, err)
+
+	angle, err := cirno.Angle(v, n)
+	assert.Nil(t, err)
+
+	assert.Equal(t, math.Ceil(n.Magnitude()), 1.0)
+	assert.Equal(t, angle, 0.0)
 }
 
 func TestVectorDotProduct(t *testing.T) {
@@ -67,7 +73,10 @@ func TestVectorAngle(t *testing.T) {
 	v2 := cirno.NewVector(0, 2)
 	res := 90.0
 
-	assert.Equal(t, cirno.Angle(v1, v2), res)
+	angle, err := cirno.Angle(v1, v2)
+	assert.Nil(t, err)
+
+	assert.Equal(t, angle, res)
 }
 
 func TestVectorPerpendicular(t *testing.T) {
@@ -78,6 +87,11 @@ func TestVectorPerpendicular(t *testing.T) {
 	fmt.Println(vp1)
 	fmt.Println(vp2)
 
-	assert.Equal(t, cirno.Angle(v1, vp1), 90.0)
-	assert.Equal(t, cirno.Angle(v1, vp2), 90.0)
+	angle1, err := cirno.Angle(v1, vp1)
+	assert.Nil(t, err)
+	angle2, err := cirno.Angle(v1, vp1)
+	assert.Nil(t, err)
+
+	assert.Equal(t, angle1, 90.0)
+	assert.Equal(t, angle2, 90.0)
 }

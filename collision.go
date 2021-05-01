@@ -225,7 +225,12 @@ func IntersectionLineToRectangle(line *Line, rect *Rectangle) (bool, error) {
 	// The method for two rectangles is as well appropriate
 	// for line and rectangle because line segment is just
 	// a rectangle with no Y extent.
-	lineAxisX := line.q.Subtract(line.Center()).Normalize()
+	lineAxisX, err := line.q.Subtract(line.Center()).Normalize()
+
+	if err != nil {
+		return false, err
+	}
+
 	lineAxisY := lineAxisX.Rotate(90)
 	lineExtent := line.Length() / 2
 	t := line.Center().Subtract(rect.center)

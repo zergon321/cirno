@@ -75,7 +75,7 @@ func (circle *Circle) NormalToCircle(other *Circle) (Vector, error) {
 		return Zero(), fmt.Errorf("the other circle is nil")
 	}
 
-	return other.center.Subtract(circle.center).Normalize(), nil
+	return other.center.Subtract(circle.center).Normalize()
 }
 
 // NormalToRectangle returns the normal from the given circle
@@ -117,9 +117,9 @@ func (circle *Circle) NormalToRectangle(rect *Rectangle) (Vector, error) {
 	}
 
 	closestPoint = closestPoint.Rotate(-theta).Add(rect.center)
-	normal := closestPoint.Subtract(circle.center).Normalize()
+	normal, err := closestPoint.Subtract(circle.center).Normalize()
 
-	return normal, nil
+	return normal, err
 }
 
 // NormalToLine returns the normal from the given circle
@@ -142,7 +142,11 @@ func (circle *Circle) NormalToLine(line *Line) (Vector, error) {
 		}
 	}
 
-	normal := closestPoint.Subtract(circle.center).Normalize()
+	normal, err := closestPoint.Subtract(circle.center).Normalize()
+
+	if err != nil {
+		return Zero(), err
+	}
 
 	if math.IsNaN(normal.X) {
 		normal.X = 0.0
@@ -193,10 +197,18 @@ func (line *Line) NormalToLine(other *Line) (Vector, error) {
 
 	if pRightOfLine == qRightOfLine {
 		pointProj := line.ProjectPoint(other.p)
-		normal = other.p.Subtract(pointProj).Normalize()
+		normal, err = other.p.Subtract(pointProj).Normalize()
+
+		if err != nil {
+			return Zero(), err
+		}
 	} else {
 		pointProj := other.ProjectPoint(line.p)
-		normal = pointProj.Subtract(line.p).Normalize()
+		normal, err = pointProj.Subtract(line.p).Normalize()
+
+		if err != nil {
+			return Zero(), err
+		}
 	}
 
 	return normal, nil
@@ -241,7 +253,12 @@ func (rect *Rectangle) NormalToLine(line *Line) (Vector, error) {
 		return Zero(), fmt.Errorf("the line is nil")
 	}
 
-	lineAxisX := line.q.Subtract(line.Center()).Normalize()
+	lineAxisX, err := line.q.Subtract(line.Center()).Normalize()
+
+	if err != nil {
+		return Zero(), err
+	}
+
 	lineAxisY := lineAxisX.Rotate(90)
 	lineExtent := line.Length() / 2
 	t := line.Center().Subtract(rect.center)

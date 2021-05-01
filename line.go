@@ -199,7 +199,7 @@ func (l *Line) CollinearTo(other *Line) (bool, error) {
 	lVec := l.q.Subtract(l.p)
 	otherVec := other.q.Subtract(other.p)
 
-	return lVec.CollinearTo(otherVec), nil
+	return lVec.CollinearTo(otherVec)
 }
 
 // SameLineWith returns true if two line segments
@@ -344,7 +344,11 @@ func NewLine(p Vector, q Vector) (*Line, error) {
 	}
 
 	pq := line.q.Subtract(line.p)
-	angle := Angle(pq, Right())
+	angle, err := Angle(pq, Right())
+
+	if err != nil {
+		return nil, err
+	}
 
 	if angle < 0 {
 		line.angle = 360 + angle

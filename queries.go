@@ -19,8 +19,14 @@ func (space *Space) Raycast(origin, direction Vector, distance float64, mask int
 		distance = Distance(space.min, space.max)
 	}
 
+	normDir, err := direction.Normalize()
+
+	if err != nil {
+		return nil, Zero(), err
+	}
+
 	ray, err := NewLine(origin, origin.Add(
-		direction.Normalize().MultiplyByScalar(distance)))
+		normDir.MultiplyByScalar(distance)))
 
 	if err != nil {
 		return nil, Zero(), err
