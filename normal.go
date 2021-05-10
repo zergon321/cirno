@@ -119,7 +119,11 @@ func (circle *Circle) NormalToRectangle(rect *Rectangle) (Vector, error) {
 	closestPoint = closestPoint.Rotate(-theta).Add(rect.center)
 	normal, err := closestPoint.Subtract(circle.center).Normalize()
 
-	return normal, err
+	if err != nil {
+		return Zero(), err
+	}
+
+	return normal, nil
 }
 
 // NormalToLine returns the normal from the given circle
