@@ -123,7 +123,7 @@ func (v Vector) Project(axis Vector) Vector {
 
 // Normalize returns a normalized vector with magnitude of 1.
 func (v Vector) Normalize() (Vector, error) {
-	if v.X < Epsilon && v.Y < Epsilon {
+	if math.Abs(v.X) < Epsilon && math.Abs(v.Y) < Epsilon {
 		return Zero(),
 			fmt.Errorf("tried to normalize zero vector")
 	}
