@@ -414,36 +414,27 @@ func (space *Space) WouldBeCollidedBy(shape Shape, moveDiff Vector, turnDiff flo
 			if id == "Line_Line" {
 				lineShape := shape.(*Line)
 				lineItem := item.(*Line)
-				linesCollinear, err := lineShape.CollinearTo(lineItem)
+				shouldCollide, err := lineShape.ShouldCollide(lineItem)
 
 				if err != nil {
 					return nil, err
 				}
 
-				if linesCollinear {
-					// Check line tags.
-					shouldCollide, err := lineShape.ShouldCollide(lineItem)
+				if space.useTags && !shouldCollide {
+					continue
+				}
 
-					if err != nil {
-						return nil, err
-					}
+				linesWouldIntersect, err := linesWouldCollide(originalPos,
+					originalAngle, moveDiff, turnDiff, lineShape, lineItem)
 
-					if space.useTags && !shouldCollide {
-						continue
-					}
+				if err != nil {
+					return nil, err
+				}
 
-					linesWouldIntersect, err := linesWouldCollide(originalPos,
-						originalAngle, moveDiff, turnDiff, lineShape, lineItem)
+				if linesWouldIntersect {
+					shapes.Insert(lineItem)
 
-					if err != nil {
-						return nil, err
-					}
-
-					if linesWouldIntersect {
-						shapes.Insert(lineItem)
-
-						continue
-					}
+					continue
 				}
 			}
 

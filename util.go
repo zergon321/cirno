@@ -11,7 +11,7 @@ const (
 	// DegToRad is a factor to transform degrees to radians.
 	DegToRad float64 = math.Pi / 180.0
 	// Epsilon is the constant for approximate comparisons.
-	Epsilon float64 = 0.01
+	Epsilon float64 = 0.000001
 	// CollinearityThreshold is the constant to detect if two vectors
 	// are effectively collinear.
 	CollinearityThreshold float64 = 10.0
@@ -83,40 +83,32 @@ func Approximate(shape Shape, moveDiff Vector, turnDiff float64, shapes Shapes, 
 			if id == "Line_Line" {
 				line := shape.(*Line)
 				otherLine := other.(*Line)
-				linesCollinear, err := line.CollinearTo(otherLine)
+				// Compare line tags.
+				shouldCollide, err := line.ShouldCollide(otherLine)
 
-				if intensity < 0 {
+				if err != nil {
 					return Zero(), 0, nil, err
 				}
 
-				if linesCollinear {
-					// Compare line tags.
-					shouldCollide, err := line.ShouldCollide(otherLine)
+				if useTags && !shouldCollide {
+					continue
+				}
 
-					if err != nil {
-						return Zero(), 0, nil, err
-					}
+				// Vice versa.
+				movement := currentPos.Subtract(prevPos)
+				turn := currentAngle - prevAngle
+				linesWouldIntersect, err := linesWouldCollide(
+					prevPos, prevAngle, movement, turn, line, otherLine)
 
-					if useTags && !shouldCollide {
-						continue
-					}
+				if err != nil {
+					return Zero(), -1, nil, err
+				}
 
-					// Vice versa.
-					movement := currentPos.Subtract(prevPos)
-					turn := currentAngle - prevAngle
-					linesWouldIntersect, err := linesWouldCollide(
-						prevPos, prevAngle, movement, turn, line, otherLine)
+				if linesWouldIntersect {
+					collisionFound = true
+					foundShape = otherLine
 
-					if err != nil {
-						return Zero(), -1, nil, err
-					}
-
-					if linesWouldIntersect {
-						collisionFound = true
-						foundShape = otherLine
-
-						break
-					}
+					break
 				}
 			}
 
