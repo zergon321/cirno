@@ -12,7 +12,9 @@ go get github.com/zergon321/cirno
 
 ## Tutorial
 
-Coming soon.
+The tutorial series explains how to use different API methods and data types of **Cirno** to handle everything related to collisions in games.
+
+- [Tutorial 01: Basic collisions](https://github.com/zergon321/cirno/wiki/Tutorial-01:-Basic-collisions)
 
 ## Examples
 
