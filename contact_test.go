@@ -28,3 +28,17 @@ func TestContactCircleToCircle(t *testing.T) {
 
 	assert.Equal(t, len(contacts), 1)
 }
+
+func TestContactLineToLine(t *testing.T) {
+	line1, err := cirno.NewLine(
+		cirno.NewVector(0, 0), cirno.NewVector(5, 5))
+	assert.Nil(t, err)
+	line2, err := cirno.NewLine(
+		cirno.NewVector(5, 0), cirno.NewVector(0, 5))
+	assert.Nil(t, err)
+
+	contacts, err := cirno.Contact(line1, line2)
+	assert.Nil(t, err)
+
+	assert.Equal(t, len(contacts), 1)
+}
